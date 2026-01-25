@@ -21,6 +21,30 @@ public class GameServer {
         }
     }
 
+    public void broadcast(String message) {
+        for (ClientHandler client : clients) {
+            client.send(message);
+        }
+    }
+
+    public void removeClient(ClientHandler clientHandler) {
+        clients.remove(clientHandler);
+    }
+
+    public void sendPlayerList() {
+        StringBuilder playerList = new StringBuilder("PLAYER_LIST ");
+        for (ClientHandler client : clients) {
+            if(client.getPseudo() != null){
+                playerList.append(client.getPseudo()).append(" ");
+            }
+        }
+        broadcast(playerList.toString().trim());
+    }
+
+    public List<ClientHandler> getClients() {
+        return clients;
+    }
+
     public static void main(String[] args) throws Exception {
         GameServer server = new GameServer();
         server.start();

@@ -11,6 +11,7 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;
     private BufferedReader in;
     private GameServer server;
+    private String pseudo;
 
     public ClientHandler(Socket socket, GameServer server) throws IOException {
         this.socket = socket;
@@ -19,16 +20,28 @@ public class ClientHandler implements Runnable {
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
+    public String getPseudo() {
+        return pseudo;
+    }
+
     @Override
     public void run() {
         try{
-            out.println("WELCOME");
+            out.println("[MESSAGE] Entrez votre pseudo avec : PSEUDO <votre_pseudo>");
             String line; 
             while ((line = in.readLine()) != null) {
-                System.out.println("Client: " + line);
+                if (line.startsWith("PSEUDO ")) {
+                    pseudo = line.substring(7);
+                    server.broadcast("MESSAGE " + pseudo + " a rejoint la partie");
+                    server.sendPlayerList();
+                } else {
+                    System.out.println("[" + pseudo + "] " + line);
+                }
             }
         }catch(IOException e){
-            System.err.println("Erreur de communication avec le client : " + e.getMessage());
+            System.out.println("Client déconnecté : " + pseudo);
+            server.removeClient(this);
+            server.broadcast("MESSAGE " + pseudo + " a quitté la partie");
         }finally{
             try {
                 socket.close();
