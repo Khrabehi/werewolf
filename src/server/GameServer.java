@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameServeur {
+public class GameServer {
     private static final int PORT = 12345; 
     private List<ClientHandler> clients = new ArrayList<>();
     
@@ -22,7 +22,7 @@ public class GameServeur {
     }
 
     public static void main(String[] args) throws Exception {
-        GameServeur server = new GameServeur();
+        GameServer server = new GameServer();
         server.start();
     }
 }

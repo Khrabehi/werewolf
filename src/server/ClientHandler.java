@@ -10,9 +10,9 @@ public class ClientHandler implements Runnable {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
-    private GameServeur server;
+    private GameServer server;
 
-    public ClientHandler(Socket socket, GameServeur server) throws IOException {
+    public ClientHandler(Socket socket, GameServer server) throws IOException {
         this.socket = socket;
         this.server = server;
         out = new PrintWriter(socket.getOutputStream(), true);
