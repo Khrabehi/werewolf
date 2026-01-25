@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import common.Phase;
 import common.Role;
 
 public class ClientHandler implements Runnable {
@@ -16,6 +17,7 @@ public class ClientHandler implements Runnable {
     private String pseudo;
     private Role role;
     private boolean isAlive = true;
+    private boolean hasVoted = false;
 
     public ClientHandler(Socket socket, GameServer server) throws IOException {
         this.socket = socket;
@@ -31,6 +33,18 @@ public class ClientHandler implements Runnable {
     public void setRole(Role role) {
         this.role = role;
         send("ROLE " + role);
+    }
+
+    public boolean hasVoted() {
+        return hasVoted;
+    }
+
+    public void resetVote() {
+        hasVoted = false;
+    }
+
+    public void setHasVoted(boolean hasVoted) {
+        this.hasVoted = hasVoted;
     }
 
     public Role getRole() {
@@ -56,16 +70,42 @@ public class ClientHandler implements Runnable {
                     pseudo = line.substring(7);
                     server.broadcast("MESSAGE " + pseudo + " a rejoint la partie");
                     server.sendPlayerList();
+                } else if (line.startsWith("KILL ")) {
+                    if (role != Role.LOUP || !isAlive) {
+                        send("MESSAGE Action interdite");
+                        continue;
+                    }
+                    if (server.getPhase() != Phase.NUIT) {
+                        send("MESSAGE Ce n'est pas la phase nuit");
+                        continue;
+                    }
+                    if (hasVoted) {
+                        send("MESSAGE Vous avez déjà voté");
+                        continue;
+                    }
+
+                    String target = line.substring(5);
+                    server.registerKillVote(this, target);
+                    hasVoted = true;
+                } else if(line.equals("START")){
+                    if (!server.isAdmin(this) && server.getAdmin() != null) {
+                        send("MESSAGE Seul l'admin peut démarrer la partie");
+                        send ("MESSAGE L'admin est le joueur : " + server.getAdmin().getPseudo());
+                        continue;
+                    }
+                    server.startGame();
                 } else {
-                    System.out.println("[" + pseudo + "] " + line);
+                    send("MESSAGE Commande inconnue");
                 }
             }
         }catch(IOException e){
             System.out.println("Client déconnecté : " + pseudo);
-            server.removeClient(this);
-            server.broadcast("MESSAGE " + pseudo + " a quitté la partie");
+            if(pseudo != null) {
+                server.broadcast("MESSAGE " + pseudo + " a quitté la partie");
+            }
         }finally{
             try {
+                server.removeClient(this);
                 socket.close();
             } catch (IOException e) {
                 System.err.println("Erreur lors de la fermeture du socket : " + e.getMessage());

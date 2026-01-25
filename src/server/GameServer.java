@@ -4,8 +4,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
+import common.Phase;
 import common.Role;
 
 public class GameServer {
@@ -13,10 +17,13 @@ public class GameServer {
     // Liste des clients connectés 
     // Utilisation de Collections.synchronizedList pour la sécurité des threads
     private List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<>());
+    private ClientHandler adminClient = null;
 
     private static final int MAX_PLAYERS = 10;
     private static final int MIN_PLAYERS = 4;
     private boolean gameStarted = false;
+    private Phase currentPhase = Phase.NUIT;
+    private Map<String, Integer> killVotes = new HashMap<>();
 
     
     public void start() throws Exception {
@@ -36,11 +43,32 @@ public class GameServer {
 
             ClientHandler clientHandler = new ClientHandler(client, this);
             clients.add(clientHandler);
-            new Thread(clientHandler).start();
 
-            if(clients.size() >= MIN_PLAYERS && !gameStarted) {
-                startGame();
+            if(adminClient == null) {
+                adminClient = clientHandler;
+                clientHandler.send("MESSAGE Vous êtes l'administrateur du jeu.");
             }
+
+            new Thread(clientHandler).start();
+        }
+    }
+
+    public void removeClient(ClientHandler clientHandler) {
+        clients.remove(clientHandler);
+        if (adminClient == clientHandler) {
+            reassignAdmin();
+        }
+        sendPlayerList();
+    }
+
+    private void reassignAdmin() {
+        synchronized (clients) {
+            if (clients.isEmpty()) {
+                adminClient = null;
+                return;
+            }
+            adminClient = clients.get(0);
+            adminClient.send("MESSAGE Vous devenez l'administrateur du jeu. Envoyez START pour lancer la partie.");
         }
     }
 
@@ -48,10 +76,6 @@ public class GameServer {
         for (ClientHandler client : clients) {
             client.send(message);
         }
-    }
-
-    public void removeClient(ClientHandler clientHandler) {
-        clients.remove(clientHandler);
     }
 
     public void sendPlayerList() {
@@ -76,7 +100,18 @@ public class GameServer {
         gameStarted = true;
         broadcast("MESSAGE La partie commence !");
         assignRoles();
+        currentPhase = Phase.NUIT;
         broadcast("PHASE NUIT");
+        startNight();
+    }
+
+    private void startNight() {
+        // Notifier les loups de voter
+        for (ClientHandler client : clients) {
+            if (client.getRole() == Role.LOUP && client.isAlive()) {
+                client.send("MESSAGE C'est la phase nuit ! Les loups votent. Envoyez KILL <pseudo> pour voter.");
+            }
+        }
     }
 
     private void assignRoles() {
@@ -107,6 +142,94 @@ public class GameServer {
         return true;
     }
 
+    public Phase getPhase() {
+        return currentPhase;
+    }
+
+    public synchronized void registerKillVote(ClientHandler voter, String target) {
+
+        ClientHandler victim = findPlayerbyPseudo(target);
+        if(victim == null || !victim.isAlive()) {
+            voter.send("MESSAGE Cible invalide pour le vote");
+            return;
+        }
+
+        killVotes.put(target, killVotes.getOrDefault(target, 0) + 1);
+        broadcast("MESSAGE Un loup à voté...");
+        voter.setHasVoted(true);
+
+        if(allWolvesHaveVoted()){
+            resolveNight();
+        }
+    }
+
+    private boolean allWolvesHaveVoted() {
+        for(ClientHandler client : clients) {
+            if(client.getRole() == Role.LOUP && client.isAlive() && !client.hasVoted()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void resolveNight() {
+        if(killVotes.isEmpty()) {
+            broadcast("MESSAGE Aucun vote de loup enregistré. Aucun villageois n'a été tué cette nuit.");
+        } else {
+            String victim = getMaxVoted(killVotes);
+            ClientHandler victimPlayer = findPlayerbyPseudo(victim);
+            if(victimPlayer != null) {
+                victimPlayer.kill();
+                broadcast("MESSAGE " + victim + " a été tué pendant la nuit !");
+            } else {
+                broadcast("MESSAGE Aucun villageois n'a été tué cette nuit.");
+            }
+        }
+
+        killVotes.clear();
+        resetVotes();
+        startDay();
+    }
+
+    private void resetVotes() {
+        for(ClientHandler client : clients) {
+            client.resetVote();
+        }
+    }
+
+    private ClientHandler findPlayerbyPseudo(String pseudo) {
+        for(ClientHandler client : clients) {
+            if(client.getPseudo() != null && client.getPseudo().equalsIgnoreCase(pseudo)) {
+                return client;
+            }
+        }
+        return null;
+    }
+
+    private void startDay() {
+        currentPhase = Phase.JOUR;
+        broadcast("PHASE JOUR");
+        broadcast("MESSAGE Le jour se lève...");
+    }
+
+    private String getMaxVoted(Map<String, Integer> votes) {
+        int max = Collections.max(votes.values());
+        List<String> top = new ArrayList<>();
+        for (var e : votes.entrySet()) {
+            if (e.getValue() == max) {
+                top.add(e.getKey());
+            }
+        }
+        return top.get(new Random().nextInt(top.size()));
+    }
+
+    public boolean isAdmin(ClientHandler client) {
+        return adminClient != null && adminClient.equals(client);
+    }
+
+    public ClientHandler getAdmin() {
+        return adminClient;
+    }
 
     public static void main(String[] args) throws Exception {
         GameServer server = new GameServer();
