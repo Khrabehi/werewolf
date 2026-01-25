@@ -6,12 +6,16 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import common.Role;
+
 public class ClientHandler implements Runnable {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
     private GameServer server;
     private String pseudo;
+    private Role role;
+    private boolean isAlive = true;
 
     public ClientHandler(Socket socket, GameServer server) throws IOException {
         this.socket = socket;
@@ -22,6 +26,24 @@ public class ClientHandler implements Runnable {
 
     public String getPseudo() {
         return pseudo;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+        send("ROLE " + role);
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public boolean isAlive() {
+        return isAlive;
+    }
+
+    public void kill() {
+        isAlive = false;
+        send("DEAD");
     }
 
     @Override
