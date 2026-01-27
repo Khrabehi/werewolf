@@ -49,26 +49,34 @@ public class CommandService {
             return events;
         }
         
-        // Exécuter la commande
-        events.addAll(command.execute(executor, gameService.getGame()));
-        
-        // Traitement spécial pour les votes
+        // Traitement spécial pour KILL (vote des loups-garous)
         if (command instanceof KillVoteCommand) {
             KillVoteCommand killCommand = (KillVoteCommand) command;
-            if (command.canExecute(executor, gameService.getGame())) {
-                events.addAll(voteService.registerVote(executor, killCommand.getTargetPseudo()));
-                
-                // Vérifier si tous les loups ont voté
-                List<Player> werewolves = gameService.getGame().getAlivePlayers().stream()
-                        .filter(p -> p.getRole() != null && p.getRole().getTeam() == Team.WEREWOLVES)
-                        .toList();
-                
-                if (voteService.allExpectedPlayersVoted(werewolves)) {
-                    events.addAll(voteService.resolveVote("tué par les loups-garous"));
-                    events.addAll(gameService.advancePhase());
-                }
+            
+            if (!command.canExecute(executor, gameService.getGame())) {
+                events.addAll(command.execute(executor, gameService.getGame()));
+                return events;
             }
+            
+            // Enregistrer le vote
+            events.addAll(voteService.registerVote(executor, killCommand.getTargetPseudo()));
+            
+            // Vérifier si tous les loups ont voté
+            List<Player> werewolves = gameService.getGame().getAlivePlayers().stream()
+                    .filter(p -> p.getRole() != null && p.getRole().getTeam() == Team.WEREWOLVES)
+                    .toList();
+            
+            if (voteService.allExpectedPlayersVoted(werewolves)) {
+                events.add(new MessageEvent("Tous les loups-garous ont voté !"));
+                events.addAll(voteService.resolveVote("tué par les loups-garous"));
+                events.addAll(gameService.advancePhase());
+            }
+            
+            return events;
         }
+        
+        // Exécuter les autres commandes normalement
+        events.addAll(command.execute(executor, gameService.getGame()));
         
         return events;
     }
