@@ -3,6 +3,7 @@ package application.service;
 import application.command.CommandParser;
 import application.command.GameCommand;
 import application.command.impl.KillVoteCommand;
+import application.command.impl.StartGameCommand;
 import application.event.GameEvent;
 import application.event.impl.MessageEvent;
 import domain.model.Game;
@@ -35,6 +36,16 @@ public class CommandService {
         
         if (command == null) {
             events.add(new MessageEvent("Commande inconnue. Commandes disponibles: PSEUDO, START, KILL"));
+            return events;
+        }
+        
+        // Traitement spécial pour START (assigner rôles + démarrer phase)
+        if (command instanceof StartGameCommand) {
+            if (command.canExecute(executor, gameService.getGame())) {
+                events.addAll(gameService.startGame());
+            } else {
+                events.addAll(command.execute(executor, gameService.getGame()));
+            }
             return events;
         }
         
