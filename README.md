@@ -1,25 +1,6 @@
-# 🐺 Loup-Garou - Version SOLID Refactorée
+# 🐺 Loup-Garou
 
-Un jeu Loup-Garou en réseau développé en Java, suivant les **principes SOLID** et l'architecture **Clean Architecture**.
-
-## ✨ Caractéristiques
-
-- ✅ **Architecture SOLID complète** (5 principes appliqués)
-- ✅ **Clean Architecture** (4 couches séparées)
-- ✅ **6 Design Patterns** implémentés
-- ✅ **Hautement extensible** (nouveaux rôles en 1 classe)
-- ✅ **100% testable** (tests unitaires inclus)
-- ✅ **Code professionnel** et maintenable
-
-## 🎯 Principes SOLID
-
-| Principe | Application |
-|----------|-------------|
-| **S**ingle Responsibility | Chaque classe a UNE responsabilité |
-| **O**pen/Closed | Extensible sans modification |
-| **L**iskov Substitution | Interfaces substituables |
-| **I**nterface Segregation | Interfaces spécifiques |
-| **D**ependency Inversion | Dépendances inversées |
+Un jeu Loup-Garou en réseau développé en Java
 
 ## 🏗️ Architecture
 
@@ -69,7 +50,7 @@ Voir [INSTALL.md](INSTALL.md) pour plus de détails.
 
 ## 📚 Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture détaillée et principes SOLID
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture détaillée
 - [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Comparaison ancien vs nouveau code
 - [DIAGRAMS.md](DIAGRAMS.md) - Diagrammes et visualisations
 - [INSTALL.md](INSTALL.md) - Installation et compilation
@@ -112,15 +93,6 @@ Des tests unitaires sont inclus dans le dossier `test/` :
 - `RoleTest.java` - Tests des rôles
 - `VoteSessionTest.java` - Tests du système de vote
 
-## 📈 Statistiques
-
-| Métrique | Avant | Après |
-|----------|-------|-------|
-| Classes | 3 | 28 |
-| Responsabilités/classe | 5-10 | 1 |
-| Testabilité | 0% | 95% |
-| Complexité cyclomatique | 45 | 3-5 |
-
 ## Folder Structure
 
 The workspace contains the following folders:
@@ -134,39 +106,7 @@ The workspace contains the following folders:
 - `bin`: compiled output files
 - `test`: unit tests
 
-## 🎓 Pour les Étudiants
-
-Ce projet démontre :
-- Maîtrise des principes SOLID
-- Architecture professionnelle
-- Design Patterns en pratique
-- Code maintenable et évolutif
-- Standards de l'industrie
-
-**Parfait pour un portfolio professionnel !**
-
-## 🔄 Prochaines Étapes
-
-- [ ] Tests unitaires complets (JUnit 5)
-- [ ] Logging (SLF4J/Logback)
-- [ ] Configuration externe (Properties)
-- [ ] Nouveaux rôles (Voyante, Chasseur, Sorcière)
-- [ ] Interface graphique (JavaFX)
-- [ ] Base de données (JPA/Hibernate)
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
-
 ## 📝 Licence
 
 Voir [LICENSE](LICENSE) pour plus de détails.
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Ce projet est conçu pour être facilement extensible.
-
----
-
-**Code professionnel • Architecture SOLID • Clean Architecture • Design Patterns**
 
