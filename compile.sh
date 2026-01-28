@@ -1,37 +1,37 @@
 #!/bin/bash
 
-# Script de compilation du projet Loup-Garou
+# Compilation script for the Loup-Garou project
 
-echo "🔨 Compilation du projet Loup-Garou..."
+echo "Compiling the Loup-Garou project..."
 
-# Créer le répertoire bin s'il n'existe pas
+# Create the bin directory if it doesn't exist
 mkdir -p bin
 
-# Trouver tous les fichiers Java et les compiler
+# Find all Java files and compile them
 find src -name "*.java" -type f > sources.txt
 
-# Compiler avec Java (utilise la version par défaut du système)
+# Compile with Java (uses the system's default version)
 if command -v javac &> /dev/null; then
     javac -d bin @sources.txt
     compile_status=$?
 else
-    echo "❌ javac n'est pas installé. Installation du JDK nécessaire:"
+    echo "javac is not installed. JDK installation required:"
     echo "   sudo apt-get install openjdk-21-jdk"
     exit 1
 fi
 
-# Nettoyer
+# Clean up
 rm sources.txt
 
 if [ $compile_status -eq 0 ]; then
-    echo "✅ Compilation réussie !"
+    echo "Compilation successful!"
     echo ""
-    echo "Pour lancer le serveur:"
+    echo "To launch the server:"
     echo "  java -cp bin infrastructure.server.GameServer"
     echo ""
-    echo "Pour lancer un client:"
+    echo "To launch a client:"
     echo "  java -cp bin presentation.client.GameClient"
 else
-    echo "❌ Erreur de compilation"
+    echo "Compilation error"
     exit 1
 fi

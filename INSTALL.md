@@ -1,27 +1,27 @@
-# Installation et Compilation
+# Installation and Compilation
 
-## 🔧 Prérequis
+## Prerequisites
 
-Le projet nécessite Java 17+ (JDK, pas seulement JRE).
+The project requires Java 17+ (JDK, not just JRE).
 
-### Vérifier votre installation Java
+### Check your Java installation
 
 ```bash
-java -version    # Vérifie le runtime
-javac -version   # Vérifie le compilateur
+java -version    # Check the runtime
+javac -version   # Check the compiler
 ```
 
-Si `javac` n'est pas trouvé, vous n'avez que le JRE. Il faut installer le JDK.
+If `javac` is not found, you only have the JRE. You need to install the JDK.
 
-## 📦 Installation du JDK
+## JDK Installation
 
 ### Ubuntu/Debian
 ```bash
-# Installer OpenJDK 21
+# Install OpenJDK 21
 sudo apt-get update
 sudo apt-get install openjdk-21-jdk
 
-# Vérifier
+# Verify
 javac -version
 ```
 
@@ -36,145 +36,73 @@ brew install openjdk@21
 ```
 
 ### Windows
-Télécharger depuis : https://adoptium.net/
+Download from: https://adoptium.net/
 
 ---
 
-## 🔨 Compilation
+## Compilation
 
-### Option 1 : Script automatique (recommandé)
+### Option 1: Automatic script (recommended)
 ```bash
 ./compile.sh
 ```
 
-### Option 2 : Commande manuelle
+### Option 2: Manual command
 ```bash
-# Créer le répertoire bin
+# Create the bin directory
 mkdir -p bin
 
-# Compiler tous les fichiers
+# Compile all files
 find src -name "*.java" -type f -print | xargs javac -d bin -sourcepath src
 
-# Ou avec un fichier temporaire
+# Or with a temporary file
 find src -name "*.java" > sources.txt
 javac -d bin @sources.txt
 rm sources.txt
 ```
 
-### Option 3 : Avec Maven (futur)
-```bash
-mvn clean compile
-```
-
 ---
 
-## 🚀 Exécution
+## Execution
 
-### Lancer le serveur
+### Launch the server
 ```bash
 java -cp bin infrastructure.server.GameServer
 ```
 
-### Lancer un client (dans un autre terminal)
+### Launch a client (in another terminal)
 ```bash
 java -cp bin presentation.client.GameClient
 ```
 
 ---
 
-## 🐛 Dépannage
-
-### Erreur : "javac: command not found"
-**Cause** : JDK non installé (seulement JRE)  
-**Solution** : Installer le JDK (voir ci-dessus)
-
-### Erreur : "package X does not exist"
-**Cause** : Ordre de compilation incorrect  
-**Solution** : Utiliser `-sourcepath src` ou compiler tous les fichiers ensemble
-
-### Erreur de version Java
-**Cause** : Code Java 17+ utilisé, mais ancien JDK installé  
-**Solution** : Installer Java 17 minimum
-
-```bash
-# Ubuntu
-sudo apt-get install openjdk-21-jdk
-sudo update-alternatives --config java
-sudo update-alternatives --config javac
-```
-
----
-
-## 📁 Structure de Compilation
+## Compilation Structure
 
 ```
 loup-garou/
-├── src/                      # Code source
-│   ├── domain/              # Couche domaine
-│   ├── application/         # Couche application
-│   ├── infrastructure/      # Couche infrastructure
-│   └── presentation/        # Couche présentation
+├── src/                      # Source code
+│   ├── domain/              # Domain layer
+│   ├── application/         # Application layer
+│   ├── infrastructure/      # Infrastructure layer
+│   └── presentation/        # Presentation layer
 │
-├── bin/                      # Fichiers .class compilés
+├── bin/                      # Compiled .class files
 │   ├── domain/
 │   ├── application/
 │   ├── infrastructure/
 │   └── presentation/
 │
-├── compile.sh               # Script de compilation
-└── ARCHITECTURE.md          # Documentation architecture
+├── compile.sh               # Compilation script
+└── ARCHITECTURE.md          # Architecture documentation
 ```
 
 ---
 
-## 🎯 Commandes Rapides
+## Complete Documentation
 
-```bash
-# Tout nettoyer et recompiler
-rm -rf bin/* && ./compile.sh
-
-# Lancer serveur + 2 clients (3 terminaux)
-# Terminal 1
-java -cp bin infrastructure.server.GameServer
-
-# Terminal 2
-java -cp bin presentation.client.GameClient
-
-# Terminal 3
-java -cp bin presentation.client.GameClient
-```
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture
+- [README.md](README.md) - Project overview
 
 ---
 
-## 🧪 Test Rapide
-
-Une fois le serveur et 4 clients lancés :
-
-```
-Client 1: PSEUDO Alice
-Client 2: PSEUDO Bob
-Client 3: PSEUDO Charlie
-Client 4: PSEUDO Diana
-
-Client 1 (admin): START
-
-# Le jeu démarre, les rôles sont assignés
-# Si vous êtes loup : KILL <pseudo>
-```
-
----
-
-## 📚 Documentation Complète
-
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture et principes SOLID
-- [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Comparaison ancien/nouveau code
-- [README.md](README.md) - Vue d'ensemble du projet
-
----
-
-## 💡 Prochaines Étapes
-
-1. **Ajouter Maven/Gradle** pour gérer les dépendances
-2. **Tests Unitaires** avec JUnit
-3. **CI/CD** avec GitHub Actions
-4. **Packaging** en JAR exécutable

@@ -1,112 +1,66 @@
-# 🐺 Loup-Garou
+# Werewolf
 
-Un jeu Loup-Garou en réseau développé en Java
+A networked Werewolf game developed in Java
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 src/
-├── domain/          # Logique métier pure (aucune dépendance)
-├── application/     # Cas d'usage (services, commandes, événements)
-├── infrastructure/  # Détails techniques (réseau, serveur)
-└── presentation/    # Interface utilisateur (client console)
+├── domain/          # Pure business logic (no dependencies)
+├── application/     # Use cases (services, commands, events)
+├── infrastructure/  # Technical details (network, server)
+└── presentation/    # User interface (console client)
 ```
 
-Voir [ARCHITECTURE.md](ARCHITECTURE.md) pour plus de détails.
+Check [ARCHITECTURE.md](ARCHITECTURE.md) for more details. 
 
-## 🚀 Installation et Lancement
+## Installation and Launch
 
-### Prérequis
-- Java 17+ (JDK, pas seulement JRE)
-- `javac` doit être disponible
+### Prerequisites
+- Java 17+ (JDK, not just JRE)
+- `javac` must be available
 
 ### Compilation
 ```bash
 ./compile.sh
 ```
 
-### Lancer le serveur
+### Launch the server
 ```bash
 java -cp bin infrastructure.server.GameServer
 ```
 
-### Lancer un client (dans un autre terminal)
+### Launch a client (in another terminal)
 ```bash
 java -cp bin presentation.client.GameClient
 ```
 
-Voir [INSTALL.md](INSTALL.md) pour plus de détails.
+See [INSTALL.md](INSTALL.md) for more details.
 
-## 🎮 Comment Jouer
+## How to Play
 
-1. Lancer le serveur
-2. Connecter 4-10 clients
-3. Chaque client entre son pseudo : `PSEUDO <votre_pseudo>`
-4. Le premier joueur connecté (admin) démarre : `START`
-5. Les rôles sont distribués automatiquement
-6. **Nuit** : Les loups votent avec `KILL <pseudo>`
-7. **Jour** : Discussion et élimination
-8. Le jeu continue jusqu'à la victoire d'un camp
+1. Launch the server
+2. Connect 4-10 clients
+3. Each client enters their username: `PSEUDO <your_username>`
+4. The first connected player (admin) starts: `START`
+5. Roles are automatically distributed
+6. **Night**: Werewolves vote with `KILL <username>`
+7. **Day**: Discussion and elimination
+8. The game continues until one team wins
 
-## 📚 Documentation
+## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture détaillée
-- [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Comparaison ancien vs nouveau code
-- [DIAGRAMS.md](DIAGRAMS.md) - Diagrammes et visualisations
-- [INSTALL.md](INSTALL.md) - Installation et compilation
-- [SUMMARY.md](SUMMARY.md) - Résumé complet du refactoring
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture
+- [INSTALL.md](INSTALL.md) - Installation and compilation
 
-## 🎨 Patterns de Conception
+## Tests
 
-1. **Strategy Pattern** - Rôles interchangeables
-2. **State Pattern** - Gestion des phases du jeu
-3. **Command Pattern** - Actions utilisateur découplées
-4. **Factory Pattern** - Création de rôles
-5. **Observer Pattern** - Notifications d'événements
-6. **Template Method** - Code réutilisable pour les rôles
+Unit tests are included in the `test/` folder:
+- `GameTest.java` - Game model tests
+- `RoleTest.java` - Role tests
+- `VoteSessionTest.java` - Voting system tests
 
-## 💡 Extensibilité
+## License
 
-### Ajouter un nouveau rôle (Voyante)
-```java
-public class SeerRole extends AbstractRole {
-    public SeerRole() {
-        super("Voyante", Team.VILLAGERS, "Description");
-    }
-    
-    @Override
-    protected void executeAction(Player actor, Player target, Game game) {
-        // Logique
-    }
-}
-
-// Enregistrer
-RoleFactory.registerRole("SEER", new SeerRole());
-```
-
-**Résultat** : 1 nouveau fichier, 0 modifications ailleurs !
-
-## 🧪 Tests
-
-Des tests unitaires sont inclus dans le dossier `test/` :
-- `GameTest.java` - Tests du modèle Game
-- `RoleTest.java` - Tests des rôles
-- `VoteSessionTest.java` - Tests du système de vote
-
-## Folder Structure
-
-The workspace contains the following folders:
-
-- `src`: the folder to maintain sources (organized by layers)
-  - `domain/`: Business logic (no dependencies)
-  - `application/`: Use cases (services, commands, events)
-  - `infrastructure/`: Technical details (network, server)
-  - `presentation/`: User interface (console client)
-- `lib`: the folder to maintain dependencies
-- `bin`: compiled output files
-- `test`: unit tests
-
-## 📝 Licence
-
-Voir [LICENSE](LICENSE) pour plus de détails.
+See [LICENSE](LICENSE) for more details.
 
