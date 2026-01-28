@@ -3,7 +3,7 @@ package application.event.impl;
 import application.event.GameEvent;
 
 /**
- * Événement de mort d'un joueur
+ * Player death event
  */
 public class PlayerDeathEvent extends GameEvent {
     private final String playerPseudo;
@@ -25,6 +25,6 @@ public class PlayerDeathEvent extends GameEvent {
 
     @Override
     public String getMessage() {
-        return "MESSAGE " + playerPseudo + " est mort ! (" + reason + ")";
+        return "MESSAGE " + playerPseudo + " is dead! (" + reason + ")";
     }
 }

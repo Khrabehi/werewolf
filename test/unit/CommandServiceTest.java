@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests unitaires pour CommandService
+ * Unit tests for CommandService
  */
 public class CommandServiceTest {
     
@@ -35,7 +35,7 @@ public class CommandServiceTest {
     }
     
     @Test
-    @DisplayName("Commande PSEUDO change le pseudo du joueur")
+    @DisplayName("PSEUDO command changes the player's pseudo")
     void testPseudoCommand() {
         List<GameEvent> events = commandService.handleCommand("PSEUDO TestPlayer", player);
         
@@ -43,35 +43,35 @@ public class CommandServiceTest {
         assertFalse(events.isEmpty());
         assertTrue(events.get(0).getMessage().contains("TestPlayer"));
         
-        System.out.println("✅ PSEUDO change bien le pseudo");
+        System.out.println("PSEUDO correctly changes the pseudo");
     }
     
     @Test
-    @DisplayName("Commande inconnue retourne un message d'erreur")
+    @DisplayName("Unknown command returns an error message")
     void testUnknownCommand() {
         List<GameEvent> events = commandService.handleCommand("INVALID_COMMAND", player);
         
         assertFalse(events.isEmpty());
         assertTrue(events.get(0).getMessage().contains("Commande inconnue"));
         
-        System.out.println("✅ Commande inconnue gérée correctement");
+        System.out.println("Unknown command handled correctly");
     }
     
     @Test
-    @DisplayName("Commande vide retourne un message d'erreur")
+    @DisplayName("Empty command returns an error message")
     void testEmptyCommand() {
         List<GameEvent> events = commandService.handleCommand("", player);
         
         assertFalse(events.isEmpty());
         assertTrue(events.get(0).getMessage().contains("Commande inconnue"));
         
-        System.out.println("✅ Commande vide gérée correctement");
+        System.out.println("Empty command handled correctly");
     }
     
     @Test
-    @DisplayName("START sans être admin échoue")
+    @DisplayName("START without being admin fails")
     void testStartWithoutAdmin() {
-        // Ajouter un 2ème joueur pour que player ne soit plus admin
+        // Add a 2nd player so that player is no longer admin
         Player admin = gameService.getGame().getAdmin();
         Player notAdmin = player.equals(admin) ? gameService.addPlayer() : player;
         
@@ -84,7 +84,7 @@ public class CommandServiceTest {
             assertFalse(gameService.getGame().isStarted());
             assertTrue(events.stream().anyMatch(e -> e.getMessage().contains("administrateur")));
             
-            System.out.println("✅ Seul l'admin peut START");
+            System.out.println("Only the admin can START");
         }
     }
 }

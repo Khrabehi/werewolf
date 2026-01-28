@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Commande pour voter pour tuer quelqu'un (loups pendant la nuit)
+ * Command to vote to kill someone (werewolves during the night)
  */
 public class KillVoteCommand implements GameCommand {
     private final String targetPseudo;
@@ -52,20 +52,20 @@ public class KillVoteCommand implements GameCommand {
         
         if (!canExecute(executor, game)) {
             if (!executor.isAlive()) {
-                events.add(new MessageEvent("Les joueurs morts ne peuvent pas voter."));
+                events.add(new MessageEvent("Dead players cannot vote."));
             } else if (executor.getRole() == null || executor.getRole().getTeam() != Team.WEREWOLVES) {
-                events.add(new MessageEvent("Seuls les Loups-Garous peuvent tuer."));
+                events.add(new MessageEvent("Only Werewolves can kill."));
             } else if (!"NIGHT".equals(game.getCurrentPhase().getName())) {
-                events.add(new MessageEvent("Vous ne pouvez tuer que pendant la nuit."));
+                events.add(new MessageEvent("You can only kill during the night."));
             } else if (executor.hasVoted()) {
-                events.add(new MessageEvent("Vous avez déjà voté."));
+                events.add(new MessageEvent("You have already voted."));
             }
             return events;
         }
         
-        // Le vote sera enregistré par le VoteService
+        // The vote will be registered by the VoteService
         executor.vote();
-        events.add(new MessageEvent("Votre vote a été enregistré."));
+        events.add(new MessageEvent("Your vote has been registered."));
         
         return events;
     }

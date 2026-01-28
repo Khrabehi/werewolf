@@ -5,32 +5,32 @@ import application.event.GameEvent;
 import java.util.List;
 
 /**
- * Interface GamePhase - Principe OCP et State Pattern
- * Permet d'ajouter de nouvelles phases sans modifier le code existant
+ * GamePhase Interface - OCP Principle and State Pattern
+ * Allows adding new phases without modifying existing code
  */
 public interface GamePhase {
     /**
-     * Retourne le nom de la phase
+     * Returns the phase name
      */
     String getName();
 
     /**
-     * Démarre la phase
+     * Starts the phase
      */
     List<GameEvent> start(Game game);
 
     /**
-     * Termine la phase et retourne la phase suivante
+     * Ends the phase and returns the next phase
      */
     GamePhase end(Game game);
 
     /**
-     * Vérifie si la phase peut se terminer
+     * Checks if the phase can end
      */
     boolean canEnd(Game game);
 
     /**
-     * Retourne la phase suivante
+     * Returns the next phase
      */
     GamePhase next(Game game);
 }

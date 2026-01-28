@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Commande pour démarrer le jeu - Command Pattern
+ * Command to start the game - Command Pattern
  */
 public class StartGameCommand implements GameCommand {
 
@@ -36,15 +36,15 @@ public class StartGameCommand implements GameCommand {
         
         if (!canExecute(executor, game)) {
             if (!game.getAdmin().equals(executor)) {
-                events.add(new MessageEvent("Seul l'administrateur peut démarrer la partie."));
+                events.add(new MessageEvent("Only the administrator can start the game."));
             } else {
-                events.add(new MessageEvent("Impossible de démarrer : pas assez de joueurs (4-10)."));
+                events.add(new MessageEvent("Cannot start: not enough players (4-10)."));
             }
             return events;
         }
         
         game.start();
-        events.add(new MessageEvent("La partie commence !"));
+        events.add(new MessageEvent("The game begins!"));
         
         return events;
     }

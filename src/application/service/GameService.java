@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service de gestion du jeu - Principe SRP
- * Responsable de la logique métier du jeu
+ * Game management service - SRP Principle
+ * Responsible for game business logic
  */
 public class GameService {
     private final Game game;
@@ -31,7 +31,7 @@ public class GameService {
     }
 
     /**
-     * Ajoute un joueur à la partie
+     * Adds a player to the game
      */
     public Player addPlayer() {
         Player player = new Player(null);
@@ -40,29 +40,30 @@ public class GameService {
     }
 
     /**
-     * Supprime un joueur de la partie
+     * Removes a player from the game
      */
     public void removePlayer(Player player) {
         game.removePlayer(player);
+        // The Game class should handle admin reassignment in its removePlayer method
     }
 
     /**
-     * Démarre la partie
+     * Starts the game
      */
     public List<GameEvent> startGame() {
         List<GameEvent> events = new ArrayList<>();
         
         if (!game.canStart()) {
-            events.add(new MessageEvent("Impossible de démarrer la partie"));
+            events.add(new MessageEvent("Cannot start the game"));
             return events;
         }
         
         game.start();
         
-        // Assigner les rôles
+        // Assign roles
         events.addAll(assignRoles());
         
-        // Démarrer la première phase (nuit)
+        // Start the first phase (night)
         NightPhase firstPhase = new NightPhase();
         game.setCurrentPhase(firstPhase);
         events.addAll(firstPhase.start(game));
@@ -71,7 +72,7 @@ public class GameService {
     }
 
     /**
-     * Assigne les rôles aux joueurs
+     * Assigns roles to players
      */
     private List<GameEvent> assignRoles() {
         List<GameEvent> events = new ArrayList<>();
@@ -88,12 +89,12 @@ public class GameService {
             events.add(new RoleAssignedEvent(player.getId(), role.getName()));
         }
         
-        events.add(new MessageEvent("Les rôles ont été distribués."));
+        events.add(new MessageEvent("Roles have been distributed."));
         return events;
     }
 
     /**
-     * Termine la phase actuelle et passe à la suivante
+     * Ends the current phase and moves to the next
      */
     public List<GameEvent> advancePhase() {
         List<GameEvent> events = new ArrayList<>();
@@ -110,7 +111,7 @@ public class GameService {
     }
 
     /**
-     * Retourne la liste des pseudos des joueurs
+     * Returns the list of player pseudos
      */
     public List<String> getPlayerList() {
         return game.getPlayers().stream()

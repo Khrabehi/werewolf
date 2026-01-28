@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Phase de nuit - State Pattern
+ * Night phase - State Pattern
  */
 public class NightPhase implements GamePhase {
 
@@ -25,15 +25,15 @@ public class NightPhase implements GamePhase {
     public List<GameEvent> start(Game game) {
         List<GameEvent> events = new ArrayList<>();
         events.add(new PhaseStartEvent("NIGHT"));
-        events.add(new MessageEvent("La nuit tombe sur le village..."));
+        events.add(new MessageEvent("Night falls over the village..."));
         
-        // Notifier les loups-garous
+        // Notify the werewolves
         long werewolvesCount = game.getAlivePlayers().stream()
                 .filter(p -> p.getRole() != null && p.getRole().getTeam() == Team.WEREWOLVES)
                 .count();
         
         if (werewolvesCount > 0) {
-            events.add(new MessageEvent("Les Loups-Garous se réveillent. Envoyez KILL <pseudo> pour voter."));
+            events.add(new MessageEvent("The Werewolves awaken. Send KILL <pseudo> to vote."));
         }
         
         return events;
@@ -41,8 +41,8 @@ public class NightPhase implements GamePhase {
 
     @Override
     public boolean canEnd(Game game) {
-        // La phase peut se terminer quand tous les loups ont voté
-        // (vérifié par le VoteService)
+        // The phase can end when all werewolves have voted
+        // (checked by VoteService)
         return true;
     }
 

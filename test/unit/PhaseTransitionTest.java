@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests des transitions de phases
+ * Phase transition tests
  */
 public class PhaseTransitionTest {
     
@@ -40,11 +40,11 @@ public class PhaseTransitionTest {
         assertTrue(nextPhase instanceof DayPhase);
         assertEquals("DAY", nextPhase.getName());
         
-        System.out.println("✅ Transition NIGHT → DAY validée");
+        System.out.println("Transition NIGHT -> DAY validated");
     }
     
     @Test
-    @DisplayName("DayPhase -> NightPhase ou EndPhase")
+    @DisplayName("DayPhase -> NightPhase or EndPhase")
     void testDayTransition() {
         DayPhase dayPhase = new DayPhase();
         
@@ -52,14 +52,14 @@ public class PhaseTransitionTest {
         assertFalse(startEvents.isEmpty());
         
         GamePhase nextPhase = dayPhase.next(game);
-        // Dépend de la victoire ou non
+        // Depends on victory or not
         assertTrue(nextPhase instanceof NightPhase || nextPhase instanceof EndPhase);
         
-        System.out.println("✅ Transition DAY testée");
+        System.out.println("DAY transition tested");
     }
     
     @Test
-    @DisplayName("EndPhase est terminale")
+    @DisplayName("EndPhase is terminal")
     void testEndPhaseIsTerminal() {
         EndPhase endPhase = new EndPhase();
         
@@ -68,15 +68,15 @@ public class PhaseTransitionTest {
         List<GameEvent> startEvents = endPhase.start(game);
         assertTrue(startEvents.stream().anyMatch(e -> e.getMessage().contains("gagné")));
         
-        // EndPhase ne doit pas avoir de phase suivante (ou retourne elle-même)
+        // EndPhase should not have a next phase (or returns itself)
         GamePhase nextPhase = endPhase.next(game);
         assertTrue(nextPhase instanceof EndPhase);
         
-        System.out.println("✅ EndPhase terminale validée");
+        System.out.println("EndPhase terminal validated");
     }
     
     @Test
-    @DisplayName("canEnd retourne toujours vrai par défaut")
+    @DisplayName("canEnd always returns true by default")
     void testCanEndDefaultBehavior() {
         NightPhase nightPhase = new NightPhase();
         assertTrue(nightPhase.canEnd(game));
@@ -84,6 +84,6 @@ public class PhaseTransitionTest {
         DayPhase dayPhase = new DayPhase();
         assertTrue(dayPhase.canEnd(game));
         
-        System.out.println("✅ canEnd fonctionne correctement");
+        System.out.println("canEnd works correctly");
     }
 }

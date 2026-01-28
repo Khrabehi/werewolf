@@ -6,22 +6,21 @@ import application.event.GameEvent;
 import java.util.List;
 
 /**
- * Interface Command - Command Pattern pour les actions utilisateur
- * Principe OCP: on peut ajouter de nouvelles commandes sans modifier le code existant
+ * Command Interface - Command Pattern for user actions
  */
 public interface GameCommand {
     /**
-     * Valide si la commande peut être exécutée
+     * Validates if the command can be executed
      */
     boolean canExecute(Player executor, Game game);
 
     /**
-     * Exécute la commande et retourne les événements générés
+     * Executes the command and returns the generated events
      */
     List<GameEvent> execute(Player executor, Game game);
 
     /**
-     * Retourne le nom de la commande
+     * Returns the command name
      */
     String getName();
 }

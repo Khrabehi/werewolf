@@ -4,8 +4,8 @@ import domain.phase.GamePhase;
 import java.util.*;
 
 /**
- * Agrégat Game - Principe SRP
- * Responsable de l'état global du jeu
+ * Game Aggregate - SRP Principle
+ * Responsible for the global game state
  */
 public class Game {
     private final String id;
@@ -62,9 +62,9 @@ public class Game {
     }
 
     public boolean canStart() {
-        return players.size() >= minPlayers && 
-               players.size() <= maxPlayers &&
-               players.stream().allMatch(p -> p.getPseudo() != null);
+        return players.size() >= minPlayers &&
+                players.size() <= maxPlayers &&
+                players.stream().allMatch(p -> p.getPseudo() != null);
     }
 
     public void addPlayer(Player player) {
@@ -82,13 +82,14 @@ public class Game {
 
     public void removePlayer(Player player) {
         players.remove(player);
-        if (admin != null && admin.equals(player)) {
-            reassignAdmin();
-        }
-    }
 
-    private void reassignAdmin() {
-        admin = players.isEmpty() ? null : players.get(0);
+        // If the admin left and there are still players, assign a new admin
+        if (admin != null && admin.equals(player) && !players.isEmpty()) {
+            admin = players.get(0);
+            System.out.println("New admin assigned: " + admin.getPseudo());
+        } else if (players.isEmpty()) {
+            admin = null;
+        }
     }
 
     public Optional<Player> findPlayerByPseudo(String pseudo) {

@@ -5,13 +5,12 @@ import application.command.impl.SetPseudoCommand;
 import application.command.impl.StartGameCommand;
 
 /**
- * Factory pour créer les commandes à partir des inputs utilisateur
- * Principe OCP: on peut ajouter de nouvelles commandes sans modifier ce code
+ * Factory to create commands from user inputs
  */
 public class CommandParser {
 
     /**
-     * Parse une ligne de commande et retourne la commande correspondante
+     * Parse a command line and return the corresponding command
      */
     public static GameCommand parse(String input) {
         if (input == null || input.trim().isEmpty()) {

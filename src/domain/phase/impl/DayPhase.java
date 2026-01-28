@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Phase de jour - State Pattern
+ * Day phase - State Pattern
  */
 public class DayPhase implements GamePhase {
 
@@ -23,14 +23,14 @@ public class DayPhase implements GamePhase {
     public List<GameEvent> start(Game game) {
         List<GameEvent> events = new ArrayList<>();
         events.add(new PhaseStartEvent("DAY"));
-        events.add(new MessageEvent("Le jour se lève sur le village..."));
-        events.add(new MessageEvent("Les villageois peuvent délibérer et voter."));
+        events.add(new MessageEvent("The sun rises over the village..."));
+        events.add(new MessageEvent("The villagers can deliberate and vote."));
         return events;
     }
 
     @Override
     public boolean canEnd(Game game) {
-        // La phase jour peut se terminer après un vote ou un timeout
+        // The day phase can end after a vote or timeout
         return true;
     }
 
@@ -42,7 +42,7 @@ public class DayPhase implements GamePhase {
 
     @Override
     public GamePhase next(Game game) {
-        // Vérifier les conditions de victoire
+        // Check victory conditions
         if (checkGameEnd(game)) {
             return new EndPhase();
         }
@@ -58,7 +58,7 @@ public class DayPhase implements GamePhase {
                 .filter(p -> p.getRole() != null && p.getRole().getTeam() == domain.role.Team.VILLAGERS)
                 .count();
         
-        // Le jeu se termine si tous les loups ou tous les villageois sont morts
+        // The game ends if all werewolves or all villagers are dead
         return werewolvesAlive == 0 || villagersAlive == 0;
     }
 }

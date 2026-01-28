@@ -7,8 +7,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 /**
- * Gère la connexion réseau d'un client - Principe SRP
- * Responsable uniquement de la communication réseau
+ * Manages a client's network connection - SRP Principle
+ * Responsible only for network communication
  */
 public class ClientConnection {
     private final Socket socket;
@@ -26,7 +26,7 @@ public class ClientConnection {
     }
 
     /**
-     * Envoie un message au client
+     * Sends a message to the client
      */
     public void send(String message) {
         if (connected) {
@@ -35,14 +35,14 @@ public class ClientConnection {
     }
 
     /**
-     * Lit une ligne depuis le client
+     * Reads a line from the client
      */
     public String readLine() throws IOException {
         return in.readLine();
     }
 
     /**
-     * Ferme la connexion
+     * Closes the connection
      */
     public void close() {
         connected = false;
@@ -51,7 +51,7 @@ public class ClientConnection {
             if (out != null) out.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
-            System.err.println("Erreur lors de la fermeture de la connexion: " + e.getMessage());
+            System.err.println("Error closing connection: " + e.getMessage());
         }
     }
 

@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service de gestion des commandes - Principe SRP
- * Responsable de l'orchestration des commandes
+ * Command management service - SRP Principle
+ * Responsible for command orchestration
  */
 public class CommandService {
     private final GameService gameService;
@@ -27,7 +27,7 @@ public class CommandService {
     }
 
     /**
-     * Traite une commande utilisateur
+     * Processes a user command
      */
     public List<GameEvent> handleCommand(String input, Player executor) {
         List<GameEvent> events = new ArrayList<>();
@@ -35,11 +35,11 @@ public class CommandService {
         GameCommand command = CommandParser.parse(input);
         
         if (command == null) {
-            events.add(new MessageEvent("Commande inconnue. Commandes disponibles: PSEUDO, START, KILL"));
+            events.add(new MessageEvent("Unknown command. Available commands: PSEUDO, START, KILL"));
             return events;
         }
         
-        // Traitement spécial pour START (assigner rôles + démarrer phase)
+        // Special handling for START (assign roles + start phase)
         if (command instanceof StartGameCommand) {
             if (command.canExecute(executor, gameService.getGame())) {
                 events.addAll(gameService.startGame());
@@ -49,7 +49,7 @@ public class CommandService {
             return events;
         }
         
-        // Traitement spécial pour KILL (vote des loups-garous)
+        // Special handling for KILL (werewolves vote)
         if (command instanceof KillVoteCommand) {
             KillVoteCommand killCommand = (KillVoteCommand) command;
             
@@ -58,24 +58,24 @@ public class CommandService {
                 return events;
             }
             
-            // Enregistrer le vote
+            // Register the vote
             events.addAll(voteService.registerVote(executor, killCommand.getTargetPseudo()));
             
-            // Vérifier si tous les loups ont voté
+            // Check if all werewolves have voted
             List<Player> werewolves = gameService.getGame().getAlivePlayers().stream()
                     .filter(p -> p.getRole() != null && p.getRole().getTeam() == Team.WEREWOLVES)
                     .toList();
             
             if (voteService.allExpectedPlayersVoted(werewolves)) {
-                events.add(new MessageEvent("Tous les loups-garous ont voté !"));
-                events.addAll(voteService.resolveVote("tué par les loups-garous"));
+                events.add(new MessageEvent("All werewolves have voted!"));
+                events.addAll(voteService.resolveVote("killed by werewolves"));
                 events.addAll(gameService.advancePhase());
             }
             
             return events;
         }
         
-        // Exécuter les autres commandes normalement
+        // Execute other commands normally
         events.addAll(command.execute(executor, gameService.getGame()));
         
         return events;

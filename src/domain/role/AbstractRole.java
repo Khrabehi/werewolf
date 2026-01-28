@@ -4,7 +4,7 @@ import domain.model.Player;
 import domain.model.Game;
 
 /**
- * Classe abstraite pour les rôles - Principe DRY et Template Method Pattern
+ * Abstract class for roles - DRY Principle and Template Method Pattern
  */
 public abstract class AbstractRole implements Role {
     protected final String name;
@@ -39,7 +39,7 @@ public abstract class AbstractRole implements Role {
     }
 
     /**
-     * Valide si l'action peut être effectuée
+     * Validates if the action can be performed
      */
     protected void validateAction(Player actor, Player target, Game game) {
         if (!actor.isAlive()) {
@@ -51,7 +51,7 @@ public abstract class AbstractRole implements Role {
     }
 
     /**
-     * Exécute l'action spécifique au rôle
+     * Executes the role-specific action
      */
     protected abstract void executeAction(Player actor, Player target, Game game);
 

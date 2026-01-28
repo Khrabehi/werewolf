@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests pour le système de vote
+ * Tests for the voting system
  */
 class VoteSessionTest {
 
@@ -53,7 +53,7 @@ class VoteSessionTest {
         voteSession.registerVote("voter1", "Alice");
         voteSession.registerVote("voter2", "Bob");
         
-        // En cas d'égalité, un gagnant aléatoire est choisi
+        // In case of a tie, a random winner is chosen
         String winner = voteSession.getWinner().get();
         assertTrue(winner.equals("Alice") || winner.equals("Bob"));
     }

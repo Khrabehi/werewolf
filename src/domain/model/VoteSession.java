@@ -3,7 +3,7 @@ package domain.model;
 import java.util.*;
 
 /**
- * Value Object pour gérer les sessions de vote - Principe SRP
+ * Value Object to manage vote sessions - SRP Principle
  */
 public class VoteSession {
     private final Map<String, Integer> votes;
@@ -37,7 +37,7 @@ public class VoteSession {
                 .map(Map.Entry::getKey)
                 .toList();
 
-        // En cas d'égalité, choisir aléatoirement
+        // In case of a tie, choose randomly
         return Optional.of(topVoted.get(new Random().nextInt(topVoted.size())));
     }
 

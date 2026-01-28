@@ -14,8 +14,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * Serveur de jeu refactoré - Principe SRP
- * Responsable uniquement de l'acceptation des connexions
+ * Refactored game server - SRP Principle
+ * Responsible only for accepting connections
  */
 public class GameServer {
     private static final int PORT = 12345;
@@ -34,11 +34,11 @@ public class GameServer {
     }
 
     /**
-     * Démarre le serveur
+     * Starts the server
      */
     public void start() throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Serveur démarré sur le port " + PORT);
+            System.out.println("Server started on port " + PORT);
             
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -48,48 +48,52 @@ public class GameServer {
     }
 
     /**
-     * Gère un nouveau client
+     * Handles a new client
      */
     private void handleNewClient(Socket clientSocket) {
         try {
-            // Vérifier si le jeu est plein ou déjà démarré
+            // Check if the game is full or already started
             if (gameService.getGame().isStarted() || 
                 gameService.getGame().getPlayers().size() >= gameService.getGame().getMaxPlayers()) {
                 rejectClient(clientSocket);
                 return;
             }
 
-            // Créer le joueur
+            // Create the player
             Player player = gameService.addPlayer();
             
-            // Créer la connexion et le handler
+            // Create the connection and handler
             ClientConnection connection = new ClientConnection(clientSocket);
-            ClientHandler handler = new ClientHandler(connection, commandService, player, eventNotifier);
-            
-            // Enregistrer le handler pour les notifications
+            ClientHandler handler = new ClientHandler(connection, commandService, player, eventNotifier, gameService);
+            boolean isAdmin = gameService.getGame().getAdmin().equals(player);
+
+            // Register the handler for notifications
             eventNotifier.registerClient(handler);
             
-            // Mettre à jour la liste des joueurs
-            eventNotifier.broadcastPlayerList(gameService.getPlayerList());
+            connection.send("MESSAGE Welcome to the game !");
             
-            // Démarrer le thread du handler
+            if(isAdmin){
+                connection.send("MESSAGE You are the administrator of the game. Use start to begin the game.");
+            }
+            
+            // Start the handler thread
             new Thread(handler).start();
             
         } catch (IOException e) {
-            System.err.println("Erreur lors de la connexion du client: " + e.getMessage());
+            System.err.println("Error connecting client: " + e.getMessage());
         }
     }
 
     /**
-     * Refuse une connexion
+     * Rejects a connection
      */
     private void rejectClient(Socket clientSocket) {
         try {
             ClientConnection connection = new ClientConnection(clientSocket);
-            connection.send("MESSAGE Le jeu a déjà commencé ou est plein. Connexion refusée.");
+            connection.send("MESSAGE The game has already started or is full. Connection refused.");
             connection.close();
         } catch (IOException e) {
-            System.err.println("Erreur lors du rejet du client: " + e.getMessage());
+            System.err.println("Error rejecting client: " + e.getMessage());
         }
     }
 
@@ -98,7 +102,7 @@ public class GameServer {
             GameServer server = new GameServer();
             server.start();
         } catch (IOException e) {
-            System.err.println("Erreur du serveur: " + e.getMessage());
+            System.err.println("Server error: " + e.getMessage());
             e.printStackTrace();
         }
     }

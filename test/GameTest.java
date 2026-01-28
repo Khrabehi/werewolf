@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Exemple de tests unitaires pour la classe Game
- * Démontre la testabilité du nouveau code
+ * Example unit tests for the Game class
+ * Demonstrates the testability of the new code
  */
 class GameTest {
     

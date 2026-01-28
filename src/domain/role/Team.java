@@ -1,11 +1,11 @@
 package domain.role;
 
 /**
- * Enum représentant les camps possibles
+ * Enum representing possible teams
  */
 public enum Team {
-    WEREWOLVES("Loups-Garous"),
-    VILLAGERS("Villageois");
+    WEREWOLVES("Werewolves"),
+    VILLAGERS("Villagers");
 
     private final String displayName;
 

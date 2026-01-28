@@ -1,12 +1,12 @@
 package domain.model;
 
 /**
- * Value Object - Configuration du jeu
+ * Value Object - Game configuration
  */
 public class GameConfiguration {
     private final int minPlayers;
     private final int maxPlayers;
-    private final int werewolvesRatio; // 1 loup pour X joueurs
+    private final int werewolvesRatio; // 1 werewolf per X players
 
     public GameConfiguration(int minPlayers, int maxPlayers, int werewolvesRatio) {
         this.minPlayers = minPlayers;

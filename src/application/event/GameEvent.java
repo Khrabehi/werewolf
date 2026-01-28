@@ -1,7 +1,7 @@
 package application.event;
 
 /**
- * Classe de base pour les événements du jeu - Principe OCP
+ * Base class for game events - OCP Principle
  */
 public abstract class GameEvent {
     private final String type;
@@ -21,7 +21,7 @@ public abstract class GameEvent {
     }
 
     /**
-     * Retourne le message à broadcaster aux joueurs
+     * Returns the message to broadcast to players
      */
     public abstract String getMessage();
 }

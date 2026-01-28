@@ -20,8 +20,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests d'intégration simulant une partie complète
- * Évite d'ouvrir 4 terminaux pour tester !
+ * Integration tests simulating a complete game
+ * Avoids opening 4 terminals for testing!
  */
 public class GameIntegrationTest {
     
@@ -43,13 +43,13 @@ public class GameIntegrationTest {
         voteService = new VoteService(game);
         commandService = new CommandService(gameService, voteService);
         
-        // Créer 4 joueurs
+        // Create 4 players
         player1 = gameService.addPlayer();
         player2 = gameService.addPlayer();
         player3 = gameService.addPlayer();
         player4 = gameService.addPlayer();
         
-        // Leur donner des pseudos
+        // Assign them pseudonyms
         commandService.handleCommand("PSEUDO Alice", player1);
         commandService.handleCommand("PSEUDO Bob", player2);
         commandService.handleCommand("PSEUDO Charlie", player3);
@@ -57,129 +57,129 @@ public class GameIntegrationTest {
     }
     
     @Test
-    @DisplayName("Une partie complète doit se dérouler correctement")
+    @DisplayName("A complete game should proceed correctly")
     void testCompleteGameFlow() {
-        // 1. Vérifier que la partie n'a pas encore démarré
+        // 1. Verify that the game has not started yet
         assertFalse(game.isStarted());
         assertEquals(4, game.getPlayers().size());
         
-        // 2. Démarrer la partie (player1 est admin)
+        // 2. Start the game (player1 is admin)
         List<GameEvent> startEvents = commandService.handleCommand("START", player1);
         assertTrue(game.isStarted());
         
-        // 3. Vérifier que les rôles ont été assignés
+        // 3. Verify that roles have been assigned
         long roleAssignedCount = startEvents.stream()
                 .filter(e -> e instanceof RoleAssignedEvent)
                 .count();
-        assertEquals(4, roleAssignedCount, "4 rôles doivent être assignés");
+        assertEquals(4, roleAssignedCount, "4 roles must be assigned");
         
-        // 4. Vérifier que tous les joueurs ont un rôle
+        // 4. Verify that all players have a role
         assertTrue(player1.getRole() != null);
         assertTrue(player2.getRole() != null);
         assertTrue(player3.getRole() != null);
         assertTrue(player4.getRole() != null);
         
-        // 5. Identifier les loups-garous
+        // 5. Identify the werewolves
         List<Player> werewolves = game.getAlivePlayers().stream()
                 .filter(p -> p.getRole().getTeam() == Team.WEREWOLVES)
                 .toList();
         
-        assertTrue(werewolves.size() >= 1, "Il doit y avoir au moins 1 loup-garou");
+        assertTrue(werewolves.size() >= 1, "There must be at least 1 werewolf");
         
-        // 6. Vérifier que la phase est NIGHT
+        // 6. Verify that the phase is NIGHT
         assertEquals("NIGHT", game.getCurrentPhase().getName());
         
-        // 7. Les loups votent pour tuer quelqu'un
+        // 7. Werewolves vote to kill someone
         List<Player> villagers = game.getAlivePlayers().stream()
                 .filter(p -> p.getRole().getTeam() == Team.VILLAGERS)
                 .toList();
         
-        // S'assurer qu'il y a au moins un villageois
+        // Ensure there is at least one villager
         if (villagers.isEmpty()) {
-            System.out.println("⚠️  Aucun villageois dans cette configuration, test incomplet");
+            System.out.println("WARNING: No villagers in this configuration, test incomplete");
             return;
         }
         
         Player victim = villagers.get(0);
         
-        // Tous les loups votent pour la même victime
+        // All werewolves vote for the same victim
         for (Player werewolf : werewolves) {
             List<GameEvent> voteEvents = commandService.handleCommand(
                 "KILL " + victim.getPseudo(), 
                 werewolf
             );
-            assertFalse(voteEvents.isEmpty(), "Le vote doit générer des événements");
+            assertFalse(voteEvents.isEmpty(), "The vote must generate events");
         }
         
-        // 8. Vérifier que la victime est morte
-        assertFalse(victim.isAlive(), "La victime doit être morte");
+        // 8. Verify that the victim is dead
+        assertFalse(victim.isAlive(), "The victim must be dead");
         
-        // 9. Vérifier le passage à la phase DAY
+        // 9. Verify transition to DAY phase
         assertEquals("DAY", game.getCurrentPhase().getName());
         
-        // 10. Vérifier qu'un événement de mort a été généré
+        // 10. Verify that a death event was generated
         long deathEvents = game.getPlayers().stream()
                 .filter(p -> !p.isAlive())
                 .count();
-        assertEquals(1, deathEvents, "1 joueur doit être mort");
+        assertEquals(1, deathEvents, "1 player must be dead");
         
-        System.out.println("✅ Test de partie complète réussi !");
-        System.out.println("   - 4 joueurs créés");
-        System.out.println("   - Rôles assignés");
-        System.out.println("   - Phase NIGHT → DAY");
-        System.out.println("   - 1 victime tuée par les loups");
+        System.out.println("Complete game test successful!");
+        System.out.println("   - 4 players created");
+        System.out.println("   - Roles assigned");
+        System.out.println("   - Phase NIGHT -> DAY");
+        System.out.println("   - 1 victim killed by werewolves");
     }
     
     @Test
-    @DisplayName("Les non-loups ne peuvent pas voter la nuit")
+    @DisplayName("Non-werewolves cannot vote at night")
     void testOnlyWerewolvesCanVoteAtNight() {
-        // Démarrer la partie
+        // Start the game
         commandService.handleCommand("START", player1);
         
-        // Trouver un villageois
+        // Find a villager
         Player villager = game.getAlivePlayers().stream()
                 .filter(p -> p.getRole().getTeam() == Team.VILLAGERS)
                 .findFirst()
                 .orElse(null);
         
         if (villager == null) {
-            System.out.println("⚠️  Pas de villageois dans cette configuration, test incomplet");
+            System.out.println("WARNING: No villagers in this configuration, test incomplete");
             return;
         }
         
-        // Essayer de voter avec un villageois
+        // Try to vote with a villager
         List<GameEvent> events = commandService.handleCommand("KILL Bob", villager);
         
-        // Vérifier qu'une erreur est retournée
+        // Verify that an error is returned
         boolean hasErrorMessage = events.stream()
                 .anyMatch(e -> e.getMessage().contains("Seuls les Loups-Garous") || 
                               e.getMessage().contains("ne peut pas agir"));
         
-        assertTrue(hasErrorMessage, "Un villageois ne devrait pas pouvoir voter la nuit");
+        assertTrue(hasErrorMessage, "A villager should not be able to vote at night");
         
-        System.out.println("✅ Validation: seuls les loups peuvent voter la nuit");
+        System.out.println("Validation: only werewolves can vote at night");
     }
     
     @Test
-    @DisplayName("Seul l'admin peut démarrer la partie")
+    @DisplayName("Only the admin can start the game")
     void testOnlyAdminCanStart() {
-        // player1 est admin, player2 ne l'est pas
+        // player1 is admin, player2 is not
         List<GameEvent> events = commandService.handleCommand("START", player2);
         
-        assertFalse(game.isStarted(), "La partie ne doit pas démarrer");
+        assertFalse(game.isStarted(), "The game must not start");
         
         boolean hasErrorMessage = events.stream()
                 .anyMatch(e -> e.getMessage().contains("administrateur"));
         
-        assertTrue(hasErrorMessage, "Un message d'erreur doit être affiché");
+        assertTrue(hasErrorMessage, "An error message must be displayed");
         
-        System.out.println("✅ Validation: seul l'admin peut lancer START");
+        System.out.println("Validation: only the admin can execute START");
     }
     
     @Test
-    @DisplayName("Impossible de démarrer avec moins de 4 joueurs")
+    @DisplayName("Cannot start with less than 4 players")
     void testCannotStartWithLessThan4Players() {
-        // Créer une nouvelle partie avec seulement 2 joueurs
+        // Create a new game with only 2 players
         GameConfiguration config = new GameConfiguration(4, 10, 1);
         GameService newGameService = new GameService(config);
         CommandService newCommandService = new CommandService(
@@ -202,15 +202,15 @@ public class GameIntegrationTest {
         
         assertTrue(hasErrorMessage);
         
-        System.out.println("✅ Validation: minimum 4 joueurs requis");
+        System.out.println("Validation: minimum 4 players required");
     }
     
     @Test
-    @DisplayName("Le vote majoritaire fonctionne correctement")
+    @DisplayName("Majority vote works correctly")
     void testMajorityVoteWorks() {
         commandService.handleCommand("START", player1);
         
-        // Identifier les loups (au moins 1)
+        // Identify werewolves (at least 1)
         List<Player> werewolves = game.getAlivePlayers().stream()
                 .filter(p -> p.getRole().getTeam() == Team.WEREWOLVES)
                 .toList();
@@ -219,22 +219,22 @@ public class GameIntegrationTest {
                 .filter(p -> p.getRole().getTeam() == Team.VILLAGERS)
                 .toList();
         
-        // Vérifier qu'il y a au moins 2 loups et 2 villageois
+        // Verify there are at least 2 werewolves and 2 villagers
         if (werewolves.size() < 2 || villagers.size() < 2) {
-            System.out.println("⚠️  Configuration inadéquate pour ce test (besoin 2+ loups, 2+ villageois)");
+            System.out.println("WARNING: Inadequate configuration for this test (need 2+ werewolves, 2+ villagers)");
             return;
         }
         
-        // Premier loup vote pour villageois 1
+        // First werewolf votes for villager 1
         commandService.handleCommand("KILL " + villagers.get(0).getPseudo(), werewolves.get(0));
         
-        // Deuxième loup vote pour villageois 1 aussi (majorité)
+        // Second werewolf also votes for villager 1 (majority)
         commandService.handleCommand("KILL " + villagers.get(0).getPseudo(), werewolves.get(1));
         
-        // Vérifier que c'est bien villageois 1 qui est mort
+        // Verify that villager 1 is indeed dead
         assertFalse(villagers.get(0).isAlive());
         assertTrue(villagers.get(1).isAlive());
         
-        System.out.println("✅ Vote majoritaire validé");
+        System.out.println("Majority vote validated");
     }
 }

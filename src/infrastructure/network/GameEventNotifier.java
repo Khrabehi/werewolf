@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Notifie les événements du jeu aux clients - Principe OCP
- * Observer Pattern pour la notification d'événements
+ * Notifies game events to clients - OCP Principle
+ * Observer Pattern for event notification
  */
 public class GameEventNotifier {
     private final List<ClientHandler> clients;
@@ -19,35 +19,35 @@ public class GameEventNotifier {
     }
 
     /**
-     * Enregistre un client pour recevoir les notifications
+     * Registers a client to receive notifications
      */
     public void registerClient(ClientHandler client) {
         clients.add(client);
     }
 
     /**
-     * Désenregistre un client
+     * Unregisters a client
      */
     public void unregisterClient(ClientHandler client) {
         clients.remove(client);
     }
 
     /**
-     * Notifie un événement à tous les clients ou un client spécifique
+     * Notifies an event to all clients or a specific client
      */
     public void notifyEvent(GameEvent event, Player sourcePlayer) {
-        // Événements personnels (ex: attribution de rôle)
+        // Personal events (e.g., role assignment)
         if (event instanceof RoleAssignedEvent) {
             RoleAssignedEvent roleEvent = (RoleAssignedEvent) event;
             notifyPlayer(roleEvent.getPlayerId(), event.getMessage());
         } else {
-            // Événements globaux
+            // Global events
             broadcast(event.getMessage());
         }
     }
 
     /**
-     * Envoie un message à tous les clients
+     * Sends a message to all clients
      */
     public void broadcast(String message) {
         for (ClientHandler client : clients) {
@@ -56,7 +56,7 @@ public class GameEventNotifier {
     }
 
     /**
-     * Envoie un message à un joueur spécifique
+     * Sends a message to a specific player
      */
     public void notifyPlayer(String playerId, String message) {
         clients.stream()
@@ -65,12 +65,12 @@ public class GameEventNotifier {
     }
 
     /**
-     * Notifie la déconnexion d'un joueur
+     * Notifies a player's disconnection
      */
     public void notifyDisconnection(Player player) {
         unregisterClient(findClientByPlayer(player));
         if (player.getPseudo() != null) {
-            broadcast("MESSAGE " + player.getPseudo() + " a quitté la partie.");
+            broadcast("MESSAGE " + player.getPseudo() + " left the game.");
         }
     }
 
@@ -82,7 +82,7 @@ public class GameEventNotifier {
     }
 
     /**
-     * Envoie la liste des joueurs à tous les clients
+     * Sends the player list to all clients
      */
     public void broadcastPlayerList(List<String> playerNames) {
         StringBuilder playerList = new StringBuilder("PLAYER_LIST ");
@@ -90,5 +90,17 @@ public class GameEventNotifier {
             playerList.append(name).append(" ");
         }
         broadcast(playerList.toString().trim());
+    }
+
+    /**
+     * Notifies a player that they are now the admin
+     */
+    public void notifyAdminStatus(Player newAdmin) {
+        for(ClientHandler client : clients){
+            if(client.getPlayer().equals(newAdmin)){
+                client.send("MESSAGE You are now the game administrator. Use START to begin the game.");
+                break;
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Phase de fin de jeu
+ * End game phase
  */
 public class EndPhase implements GamePhase {
 
@@ -28,10 +28,10 @@ public class EndPhase implements GamePhase {
                 .filter(p -> p.getRole() != null && p.getRole().getTeam() == Team.WEREWOLVES)
                 .count();
         
-        String winner = werewolvesAlive == 0 ? "Villageois" : "Loups-Garous";
+        String winner = werewolvesAlive == 0 ? "Villagers" : "Werewolves";
         
         events.add(new GameEndEvent(winner));
-        events.add(new MessageEvent("La partie est terminée ! Les " + winner + " ont gagné !"));
+        events.add(new MessageEvent("The game is over! The " + winner + " have won!"));
         
         return events;
     }
@@ -43,11 +43,11 @@ public class EndPhase implements GamePhase {
 
     @Override
     public GamePhase end(Game game) {
-        return this; // Phase finale
+        return this; // Final phase
     }
 
     @Override
     public GamePhase next(Game game) {
-        return this; // Pas de phase suivante
+        return this; // No next phase
     }
 }

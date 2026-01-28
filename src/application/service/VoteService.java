@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Service de gestion des votes - Principe SRP
- * Responsable uniquement de la logique de vote
+ * Vote management service - SRP Principle
+ * Responsible only for voting logic
  */
 public class VoteService {
     private final VoteSession currentVoteSession;
@@ -25,22 +25,22 @@ public class VoteService {
     }
 
     /**
-     * Enregistre un vote
+     * Registers a vote
      */
     public List<GameEvent> registerVote(Player voter, String targetPseudo) {
         List<GameEvent> events = new ArrayList<>();
         
         try {
-            // Vérifier que la cible existe et est vivante
+            // Check that the target exists and is alive
             Optional<Player> targetOpt = game.findPlayerByPseudo(targetPseudo);
             if (targetOpt.isEmpty() || !targetOpt.get().isAlive()) {
-                events.add(new MessageEvent("Cible invalide pour le vote."));
+                events.add(new MessageEvent("Invalid target for the vote."));
                 return events;
             }
             
-            // Enregistrer le vote
+            // Register the vote
             currentVoteSession.registerVote(voter.getId(), targetPseudo);
-            events.add(new MessageEvent("Vote enregistré."));
+            events.add(new MessageEvent("Vote registered."));
             
         } catch (IllegalStateException e) {
             events.add(new MessageEvent(e.getMessage()));
@@ -50,7 +50,7 @@ public class VoteService {
     }
 
     /**
-     * Vérifie si tous les joueurs attendus ont voté
+     * Checks if all expected players have voted
      */
     public boolean allExpectedPlayersVoted(List<Player> expectedVoters) {
         return expectedVoters.stream()
@@ -59,7 +59,7 @@ public class VoteService {
     }
 
     /**
-     * Résout le vote et retourne les événements
+     * Resolves the vote and returns the events
      */
     public List<GameEvent> resolveVote(String reason) {
         List<GameEvent> events = new ArrayList<>();
@@ -67,7 +67,7 @@ public class VoteService {
         Optional<String> winnerOpt = currentVoteSession.getWinner();
         
         if (winnerOpt.isEmpty()) {
-            events.add(new MessageEvent("Aucun vote enregistré."));
+            events.add(new MessageEvent("No votes recorded."));
         } else {
             String victimPseudo = winnerOpt.get();
             Optional<Player> victimOpt = game.findPlayerByPseudo(victimPseudo);
@@ -79,14 +79,14 @@ public class VoteService {
             }
         }
         
-        // Réinitialiser la session de vote
+        // Reset the vote session
         currentVoteSession.clear();
         
         return events;
     }
 
     /**
-     * Annule la session de vote actuelle
+     * Cancels the current vote session
      */
     public void clearVotes() {
         currentVoteSession.clear();

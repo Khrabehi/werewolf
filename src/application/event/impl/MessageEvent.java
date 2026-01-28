@@ -3,7 +3,7 @@ package application.event.impl;
 import application.event.GameEvent;
 
 /**
- * Événement de message général
+ * General message event
  */
 public class MessageEvent extends GameEvent {
     private final String message;

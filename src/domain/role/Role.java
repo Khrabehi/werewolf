@@ -4,32 +4,32 @@ import domain.model.Player;
 import domain.model.Game;
 
 /**
- * Interface Role - Principe OCP (Open/Closed) et ISP (Interface Segregation)
- * Permet d'ajouter de nouveaux rôles sans modifier le code existant
+ * Role Interface - OCP (Open/Closed) and ISP (Interface Segregation) Principles
+ * Allows adding new roles without modifying existing code
  */
 public interface Role {
     /**
-     * Retourne le nom du rôle
+     * Returns the role name
      */
     String getName();
 
     /**
-     * Retourne le camp du rôle (WEREWOLVES ou VILLAGERS)
+     * Returns the role's team (WEREWOLVES or VILLAGERS)
      */
     Team getTeam();
 
     /**
-     * Détermine si ce rôle peut effectuer une action pendant cette phase
+     * Determines if this role can perform an action during this phase
      */
     boolean canActDuringPhase(String phaseName);
 
     /**
-     * Exécute l'action du rôle
+     * Executes the role's action
      */
     void performAction(Player actor, Player target, Game game);
 
     /**
-     * Retourne la description du rôle pour le joueur
+     * Returns the role description for the player
      */
     String getDescription();
 }

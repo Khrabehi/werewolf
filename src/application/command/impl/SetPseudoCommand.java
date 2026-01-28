@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Commande pour définir le pseudo
+ * Command to set the pseudo
  */
 public class SetPseudoCommand implements GameCommand {
     private final String pseudo;
@@ -35,15 +35,15 @@ public class SetPseudoCommand implements GameCommand {
         
         if (!canExecute(executor, game)) {
             if (game.isStarted()) {
-                events.add(new MessageEvent("Impossible de changer de pseudo : la partie a déjà commencé."));
+                events.add(new MessageEvent("Cannot change pseudo: the game has already started."));
             } else {
-                events.add(new MessageEvent("Pseudo invalide."));
+                events.add(new MessageEvent("Invalid pseudo."));
             }
             return events;
         }
         
         executor.setPseudo(pseudo);
-        events.add(new MessageEvent(pseudo + " a rejoint la partie !"));
+        events.add(new MessageEvent(pseudo + " joined the game!"));
         
         return events;
     }

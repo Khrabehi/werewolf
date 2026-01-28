@@ -3,7 +3,7 @@ package application.event.impl;
 import application.event.GameEvent;
 
 /**
- * Événement de fin de jeu
+ * Game end event
  */
 public class GameEndEvent extends GameEvent {
     private final String winner;

@@ -6,13 +6,13 @@ import domain.role.AbstractRole;
 import domain.role.Team;
 
 /**
- * Implémentation du rôle Villageois
+ * Villager role implementation
  */
 public class VillagerRole extends AbstractRole {
 
     public VillagerRole() {
-        super("Villageois", Team.VILLAGERS,
-              "Vous êtes un simple Villageois. Trouvez et éliminez les Loups-Garous.");
+        super("Villager", Team.VILLAGERS,
+              "You are a simple Villager. Find and eliminate the Werewolves.");
     }
 
     @Override
@@ -22,6 +22,6 @@ public class VillagerRole extends AbstractRole {
 
     @Override
     protected void executeAction(Player actor, Player target, Game game) {
-        // Les villageois votent pendant le jour (géré par VoteService)
+        // Villagers vote during the day (managed by VoteService)
     }
 }

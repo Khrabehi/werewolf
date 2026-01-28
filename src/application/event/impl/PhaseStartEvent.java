@@ -3,7 +3,7 @@ package application.event.impl;
 import application.event.GameEvent;
 
 /**
- * Événement de démarrage de phase
+ * Phase start event
  */
 public class PhaseStartEvent extends GameEvent {
     private final String phaseName;

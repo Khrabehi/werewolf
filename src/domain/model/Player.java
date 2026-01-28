@@ -4,8 +4,8 @@ import domain.role.Role;
 import java.util.UUID;
 
 /**
- * Entité Player - Principe SRP (Single Responsibility)
- * Représente uniquement l'état d'un joueur
+ * Player Entity - SRP Principle (Single Responsibility)
+ * Represents only a player's state
  */
 public class Player {
     private final String id;

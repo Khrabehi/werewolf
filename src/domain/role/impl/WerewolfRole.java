@@ -6,14 +6,14 @@ import domain.role.AbstractRole;
 import domain.role.Team;
 
 /**
- * Implémentation du rôle Loup-Garou
- * Principe OCP: nouvelle implémentation sans modifier le code existant
+ * Werewolf role implementation
+ * OCP Principle: new implementation without modifying existing code
  */
 public class WerewolfRole extends AbstractRole {
 
     public WerewolfRole() {
-        super("Loup-Garou", Team.WEREWOLVES, 
-              "Vous êtes un Loup-Garou. Tuez les villageois chaque nuit pour gagner.");
+        super("Werewolf", Team.WEREWOLVES, 
+              "You are a Werewolf. Kill the villagers each night to win.");
     }
 
     @Override
@@ -23,7 +23,7 @@ public class WerewolfRole extends AbstractRole {
 
     @Override
     protected void executeAction(Player actor, Player target, Game game) {
-        // L'action de tuer est gérée par le VoteService
-        // Ce rôle autorise simplement le vote pendant la nuit
+        // The kill action is managed by VoteService
+        // This role simply allows voting during the night
     }
 }

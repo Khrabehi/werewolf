@@ -3,7 +3,7 @@ package application.event.impl;
 import application.event.GameEvent;
 
 /**
- * Événement d'attribution de rôle
+ * Role assignment event
  */
 public class RoleAssignedEvent extends GameEvent {
     private final String playerId;
