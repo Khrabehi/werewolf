@@ -15,3 +15,13 @@ mvn clean javafx:run
 ```
 
 This command compiles and starts the JavaFX application using `com.werewolf.Main`.
+
+## Run unit tests
+
+From the project root:
+
+```bash
+mvn test
+```
+
+This command runs all unit tests in `src/test/java`.
