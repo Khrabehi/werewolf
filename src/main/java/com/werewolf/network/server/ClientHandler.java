@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.security.MessageDigest;
 
 import com.werewolf.network.shared.Message;
 import com.werewolf.network.shared.MessageType;
