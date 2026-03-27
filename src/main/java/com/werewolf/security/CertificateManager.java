@@ -7,15 +7,18 @@ import java.util.Arrays;
 
 public class CertificateManager {
 
-    private static final String CERTS_DIR = "certs" + File.separator;
-    public static final String CA_CERT = CERTS_DIR + "ca.crt";
-    public static final String CA_KEYSTORE = CERTS_DIR + "ca.p12";
+    // Target path for certificate resources
+    private static final String CERTS_DIR = "src/main/resources/certificates/";
+
+    // Certificate file names according to specifications
+    public static final String CA_CERT = CERTS_DIR + "rootCA.cer";
+    public static final String CA_KEYSTORE = CERTS_DIR + "rootCA.p12"; // Internal keystore for the CA
 
     public static final String SERVER_KEYSTORE = CERTS_DIR + "server.p12";
-    public static final String SERVER_TRUSTSTORE = CERTS_DIR + "server_trust.p12";
+    public static final String SERVER_TRUSTSTORE = CERTS_DIR + "server-truststore.p12";
 
     public static final String CLIENT_KEYSTORE = CERTS_DIR + "client.p12";
-    public static final String CLIENT_TRUSTSTORE = CERTS_DIR + "client_trust.p12";
+    public static final String CLIENT_TRUSTSTORE = CERTS_DIR + "client-truststore.p12";
 
     /**
      * Loads a KeyStore from a PKCS12 file.
@@ -35,10 +38,10 @@ public class CertificateManager {
     /**
      * Orchestrates the entire mTLS certificate generation process.
      * Creates a CA, signs server/client certs, and builds truststores.
-     * * @param password The shared password for all stores in this dev environment
+     * @param password The shared password for all stores in this dev environment
      */
     public static void initializeCertificates(String password) {
-        File dir = new File("certs");
+        File dir = new File(CERTS_DIR);
         if (!dir.exists()) {
             dir.mkdirs();
         }
@@ -74,7 +77,7 @@ public class CertificateManager {
             runKeytool("-importcert", "-alias", "ca", "-keystore", CLIENT_TRUSTSTORE,
                     "-storepass", password, "-file", CA_CERT, "-noprompt");
 
-            System.out.println("mTLS Infrastructure generated successfully in /certs folder.");
+            System.out.println("mTLS Infrastructure generated successfully in " + CERTS_DIR + " folder.");
 
         } catch (Exception e) {
             System.err.println("Error generating certificates: " + e.getMessage());
