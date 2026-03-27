@@ -85,9 +85,10 @@ class SSLContextFactoryTest {
             Thread serverThread = new Thread(() -> {
                 try (SSLSocket acceptedSocket = (SSLSocket) serverSocket.accept()) {
                     acceptedSocket.startHandshake();
-                    latch.countDown(); // TLS handshake success
                 } catch (Exception e) {
                     serverException[0] = e;
+                } finally {
+                    latch.countDown(); // Ensure latch is always decremented on success or failure
                 }
             });
             serverThread.start();

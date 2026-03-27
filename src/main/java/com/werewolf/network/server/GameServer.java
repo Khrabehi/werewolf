@@ -1,12 +1,12 @@
 package com.werewolf.network.server;
 
-import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.werewolf.security.CertificateManager;
 import com.werewolf.security.SSLContextFactory;
@@ -15,7 +15,19 @@ public class GameServer {
     private static final int PORT = 8443; // Standard port for HTTPS
     private static final int MAX_PLAYERS = 10;
 
-    private static final String STORE_PASSWORD = "werewolf_pass";
+    private static final String STORE_PASSWORD = loadStorePassword();
+
+    private static String loadStorePassword() {
+        String password = System.getProperty("GAMESERVER_STORE_PASSWORD");
+        if (password == null || password.isEmpty()) {
+            password = System.getenv("GAMESERVER_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
+            throw new IllegalStateException(
+                    "Keystore password not configured. Set system property or environment variable 'GAMESERVER_STORE_PASSWORD'.");
+        }
+        return password;
+    }
 
     // Thread pool to not overused the server
     private ExecutorService threadPool;
@@ -43,8 +55,10 @@ public class GameServer {
                 System.out.println("Waiting for secure players (Max " + MAX_PLAYERS + ")...");
 
                 while (true) {
-                    // The accept() method now performs the TLS Handshake in the background
-                    Socket clientSocket = serverSocket.accept();
+                    // Accept the connection and explicitly start the TLS handshake to fail fast
+                    // on missing/invalid client certificates before passing to the handler
+                    SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+                    clientSocket.startHandshake();
                     System.out.println("Encrypted connection established with: " + clientSocket.getInetAddress());
 
                     // The ClientHandler handles the stream as before (encryption is transparent) to it

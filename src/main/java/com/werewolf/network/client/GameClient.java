@@ -23,7 +23,19 @@ public class GameClient {
     private ObjectInputStream in;
     private String playerName;
 
-    private static final String STORE_PASSWORD = "werewolf_pass";
+    private static final String STORE_PASSWORD = loadStorePassword();
+
+    private static String loadStorePassword() {
+        String password = System.getProperty("GAMECLIENT_STORE_PASSWORD");
+        if (password == null || password.isEmpty()) {
+            password = System.getenv("GAMECLIENT_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
+            throw new IllegalStateException(
+                    "Keystore password not configured. Set system property or environment variable 'GAMECLIENT_STORE_PASSWORD'.");
+        }
+        return password;
+    }
 
     public GameClient(String serverAddress, int serverPort, String playerName) {
         this.serverAddress = serverAddress;
@@ -32,9 +44,6 @@ public class GameClient {
     }
 
     public void connect() {
-        System.out.println("Checking client certificate infrastructure...");
-        // Ensure certificates exist before trying to connect
-        CertificateManager.initializeCertificates(STORE_PASSWORD);
         try {
             // Create SSL Context with Client Identity and Server Validation
             SSLContext sslContext = SSLContextFactory.createClientSSLContext(

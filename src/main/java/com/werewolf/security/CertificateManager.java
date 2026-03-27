@@ -1,14 +1,17 @@
 package com.werewolf.security;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.Arrays;
 
 public class CertificateManager {
 
-    // Target path for certificate resources
-    private static final String CERTS_DIR = "src/main/resources/certificates/";
+    // Target path for certificate artifacts — writable external location outside the source tree
+    private static final String CERTS_DIR = System.getProperty("user.home") + File.separator
+            + ".werewolf" + File.separator + "certificates" + File.separator;
 
     // Certificate file names according to specifications
     public static final String CA_CERT = CERTS_DIR + "rootCA.cer";
@@ -46,10 +49,35 @@ public class CertificateManager {
             dir.mkdirs();
         }
 
-        // Skip generation if the CA already exists
-        if (new File(CA_KEYSTORE).exists() && new File(SERVER_KEYSTORE).exists()) {
+        // Determine existence of all expected certificate artifacts
+        File[] expectedFiles = new File[] {
+                new File(CA_CERT),
+                new File(CA_KEYSTORE),
+                new File(SERVER_KEYSTORE),
+                new File(SERVER_TRUSTSTORE),
+                new File(CLIENT_KEYSTORE),
+                new File(CLIENT_TRUSTSTORE)
+        };
+
+        boolean allExist = Arrays.stream(expectedFiles).allMatch(File::exists);
+        boolean anyExist = Arrays.stream(expectedFiles).anyMatch(File::exists);
+
+        // Skip generation only if all certificate artifacts already exist
+        if (allExist) {
             System.out.println("Certificates already exist. Skipping generation.");
             return;
+        }
+
+        // Handle partially generated state by cleaning up existing artifacts
+        if (anyExist) {
+            System.out.println("Detected partially initialized certificate infrastructure. "
+                    + "Cleaning up existing certificate artifacts before regeneration.");
+            for (File file : expectedFiles) {
+                if (file.exists() && !file.delete()) {
+                    System.err.println("Warning: Failed to delete existing certificate file: "
+                            + file.getAbsolutePath());
+                }
+            }
         }
 
         System.out.println("Initializing mTLS Certificate Infrastructure...");
@@ -80,8 +108,8 @@ public class CertificateManager {
             System.out.println("mTLS Infrastructure generated successfully in " + CERTS_DIR + " folder.");
 
         } catch (Exception e) {
-            System.err.println("Error generating certificates: " + e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("Failed to initialize mTLS certificates", e);
         }
     }
 
@@ -122,18 +150,36 @@ public class CertificateManager {
 
     /**
      * Helper to execute keytool commands via ProcessBuilder.
+     * Resolves keytool from the current JVM's java.home to avoid PATH issues.
+     * Captures stdout/stderr so errors include actionable output.
      */
     private static void runKeytool(String... args) throws Exception {
+        String keytoolPath = System.getProperty("java.home") + File.separator + "bin"
+                + File.separator + "keytool"
+                + (System.getProperty("os.name", "").toLowerCase().contains("win") ? ".exe" : "");
+
         String[] command = new String[args.length + 1];
-        command[0] = "keytool";
+        command[0] = keytoolPath;
         System.arraycopy(args, 0, command, 1, args.length);
 
         ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(true); // Merge stderr into stdout to avoid deadlock
+
         Process process = pb.start();
+
+        // Consume all output before waiting to prevent buffer-full deadlock
+        String output;
+        try (InputStream is = process.getInputStream();
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            is.transferTo(baos);
+            output = baos.toString();
+        }
+
         int exitCode = process.waitFor();
 
         if (exitCode != 0) {
-            throw new RuntimeException("Keytool command failed: " + Arrays.toString(command));
+            throw new RuntimeException("Keytool command failed with exit code " + exitCode
+                    + ": " + Arrays.toString(command) + "\nOutput: " + output);
         }
     }
 }
