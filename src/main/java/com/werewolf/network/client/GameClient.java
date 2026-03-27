@@ -49,7 +49,7 @@ public class GameClient {
                 System.out.println("-> Send : " + message.getType());
             }
         } catch (IOException e) {
-            System.err.println("Error during the sendind of a message : " + e.getMessage());
+            System.err.println("Error during the sending of a message : " + e.getMessage());
         }
     }
 
