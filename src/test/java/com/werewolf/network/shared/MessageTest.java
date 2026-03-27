@@ -17,15 +17,19 @@ class MessageTest {
     void testMessageSerialization() throws IOException, ClassNotFoundException {
         Message originalMessage = new Message(MessageType.PING, "Test user", "Hello world!");
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(originalMessage);
-        oos.flush();
+        byte[] serialized;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(originalMessage);
+            oos.flush();
+            serialized = baos.toByteArray();
+        }
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        ObjectInputStream ois = new ObjectInputStream(bais);
-        Message deserializedMessage = (Message) ois.readObject();
-        ois.close();
+        Message deserializedMessage;
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
+            deserializedMessage = (Message) ois.readObject();
+        }
 
         assertNotNull(deserializedMessage);
         assertEquals(MessageType.PING, deserializedMessage.getType());
