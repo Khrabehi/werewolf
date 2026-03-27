@@ -8,4 +8,5 @@ module com.werewolf {
     exports com.werewolf.network.shared;
     exports com.werewolf.network.server;
     exports com.werewolf.network.client;
+    exports com.werewolf.security;
 }
