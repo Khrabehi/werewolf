@@ -10,6 +10,7 @@ public class GameSession {
     private String sessionId;
     private Map<String, Player> players;
     private GamePhase currentPhase;
+    private Map<String, String> currentVotes = new ConcurrentHashMap<>();
 
     public GameSession(String sessionId) {
         this.sessionId = sessionId;
@@ -45,7 +46,7 @@ public class GameSession {
 
     public void updatePhase(GamePhase phase) {
         this.currentPhase = phase;
-        
+
         if (phase == GamePhase.NIGHT) {
             resetProtections();
         }
@@ -55,5 +56,17 @@ public class GameSession {
         for (Player player : players.values()) {
             player.setProtected(false);
         }
+    }
+
+    public void recordVote(String voterId, String targetId) {
+        currentVotes.put(voterId, targetId);
+    }
+
+    public void notifySessionUpdate(String message) {
+        System.out.println("[BROADCAST] " + message);
+    }
+
+    public void sendPrivateMessage(String playerId, String message) {
+        System.out.println("[PRIVATE to " + playerId + "] " + message);
     }
 }
