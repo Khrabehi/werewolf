@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public class GameSession {
@@ -11,6 +12,7 @@ public class GameSession {
     private Map<String, Player> players;
     private GamePhase currentPhase;
     private Map<String, String> currentVotes = new ConcurrentHashMap<>();
+    private final List<GameStateObserver> observers = new CopyOnWriteArrayList<>();
 
     public GameSession(String sessionId) {
         this.sessionId = sessionId;
@@ -62,11 +64,22 @@ public class GameSession {
         currentVotes.put(voterId, targetId);
     }
 
-    public void notifySessionUpdate(String message) {
-        System.out.println("[BROADCAST] " + message);
-    }
-
     public void sendPrivateMessage(String playerId, String message) {
         System.out.println("[PRIVATE to " + playerId + "] " + message);
+    }
+
+    public void subscribe(GameStateObserver observer) {
+        observers.add(observer);
+    }
+
+    public void unsubscribe(GameStateObserver observer) {
+        observers.remove(observer);
+    }
+
+    public void notifySessionUpdate(String message) {
+        GameStateUpdate update = new GameStateUpdate(message);
+        for (GameStateObserver observer : observers) {
+            observer.onGameStateUpdate(update);
+        }
     }
 }

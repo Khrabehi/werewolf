@@ -2,11 +2,11 @@ package com.werewolf.validation;
 
 public class CommandExecutionResult {
     private final boolean success;
-    private final String message;
+    private final String errorMessage;
 
-    private CommandExecutionResult(boolean success, String message) {
+    private CommandExecutionResult(boolean success, String errorMessage) {
         this.success = success;
-        this.message = message;
+        this.errorMessage = errorMessage;
     }
 
     public static CommandExecutionResult success() {
@@ -21,7 +21,7 @@ public class CommandExecutionResult {
         return success;
     }
 
-    public String getMessage() {
-        return message;
+    public String getErrorMessage() {
+        return errorMessage;
     }
 }
