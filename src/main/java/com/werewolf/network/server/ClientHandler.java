@@ -1,8 +1,8 @@
 package com.werewolf.network.server;
 
+import com.werewolf.event.GameStateObserver;
+import com.werewolf.event.GameStateUpdate;
 import com.werewolf.game.GameSession;
-import com.werewolf.game.GameStateObserver;
-import com.werewolf.game.GameStateUpdate;
 import com.werewolf.network.shared.GameCommand;
 import com.werewolf.network.shared.Message;
 import com.werewolf.network.shared.MessageType;
