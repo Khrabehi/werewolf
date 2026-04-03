@@ -1,6 +1,7 @@
 package com.werewolf.game;
 
-import java.util.ArrayList;
+import com.werewolf.event.GameStateObserver;
+import com.werewolf.event.GameStateUpdate;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +13,7 @@ public class GameSession {
     private Map<String, Player> players;
     private GamePhase currentPhase;
     private Map<String, String> currentVotes = new ConcurrentHashMap<>();
+    
     private final List<GameStateObserver> observers = new CopyOnWriteArrayList<>();
 
     public GameSession(String sessionId) {
@@ -28,44 +30,10 @@ public class GameSession {
         return players.get(id);
     }
 
-    public List<Player> getPlayers() {
-        return new ArrayList<>(players.values());
-    }
-
     public List<Player> getAlivePlayers() {
         return players.values().stream()
                 .filter(Player::isAlive)
                 .collect(Collectors.toList());
-    }
-
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    public GamePhase getCurrentPhase() {
-        return currentPhase;
-    }
-
-    public void updatePhase(GamePhase phase) {
-        this.currentPhase = phase;
-
-        if (phase == GamePhase.NIGHT) {
-            resetProtections();
-        }
-    }
-
-    private void resetProtections() {
-        for (Player player : players.values()) {
-            player.setProtected(false);
-        }
-    }
-
-    public void recordVote(String voterId, String targetId) {
-        currentVotes.put(voterId, targetId);
-    }
-
-    public void sendPrivateMessage(String playerId, String message) {
-        System.out.println("[PRIVATE to " + playerId + "] " + message);
     }
 
     public void subscribe(GameStateObserver observer) {
@@ -77,9 +45,36 @@ public class GameSession {
     }
 
     public void notifySessionUpdate(String message) {
-        GameStateUpdate update = new GameStateUpdate(message);
-        for (GameStateObserver observer : observers) {
-            observer.onGameStateUpdate(update);
-        }
+        GameStateUpdate update = new GameStateUpdate(
+            message,
+            this.currentPhase,
+            getAlivePlayers()
+        );
+        
+        observers.forEach(observer -> observer.onGameStateUpdate(update));
     }
+
+    // --- Logique de Jeu ---
+    public void updatePhase(GamePhase phase) {
+        this.currentPhase = phase;
+        if (phase == GamePhase.NIGHT) {
+            resetProtections();
+        }
+        notifySessionUpdate("Phase updated to: " + phase);
+    }
+
+    private void resetProtections() {
+        players.values().forEach(p -> p.setProtected(false));
+    }
+
+    public void recordVote(String voterId, String targetId) {
+        currentVotes.put(voterId, targetId);
+    }
+
+    public void sendPrivateMessage(String playerId, String message) {
+        System.out.println("[PRIVATE to " + playerId + "] " + message);
+    }
+
+    public GamePhase getCurrentPhase() { return currentPhase; }
+    public String getSessionId() { return sessionId; }
 }
