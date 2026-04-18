@@ -36,6 +36,17 @@ public class GameSession {
                 .collect(Collectors.toList());
     }
 
+    public List<Player> getPlayers() {
+        return List.copyOf(players.values());
+    }
+
+    public void removePlayer(String playerId) {
+        Player removed = players.remove(playerId);
+        if (removed != null) {
+            notifySessionUpdate("Player " + removed.getUsername() + " has left the game.");
+        }
+    }
+
     public void subscribe(GameStateObserver observer) {
         observers.add(observer);
     }

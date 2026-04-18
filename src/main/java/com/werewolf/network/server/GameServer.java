@@ -5,6 +5,9 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
 import java.net.Socket;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,8 +19,10 @@ import com.werewolf.security.SSLContextFactory;
 public class GameServer {
     private static final int PORT = 8443; // Standard port for HTTPS
     private static final int MAX_PLAYERS = 10;
-
     private static final String STORE_PASSWORD = loadStorePassword();
+
+    private Map<String, GameSession> gameSessions = new ConcurrentHashMap<>();
+    private Map<String, ClientHandler> connectedClients = new ConcurrentHashMap<>();
 
     private static String loadStorePassword() {
         String password = System.getProperty("GAMESERVER_STORE_PASSWORD");
@@ -73,6 +78,24 @@ public class GameServer {
             System.err.println("Critical error when starting the secure server: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private GameSession findOrCreateSession() {
+        for (GameSession session : gameSessions.values()) {
+            if (session.getPlayers().size() < MAX_PLAYERS) {
+                // Vous pourrez ajouter ici une vérification pour ne rejoindre que les parties
+                // en LOBBY
+                return session;
+            }
+        }
+
+        // Création d'une nouvelle session si toutes sont pleines
+        String newSessionId = "Session-" + UUID.randomUUID().toString().substring(0, 8);
+        GameSession newSession = new GameSession(newSessionId);
+        gameSessions.put(newSessionId, newSession);
+        System.out.println("--- Created new Game Session: " + newSessionId + " ---");
+
+        return newSession;
     }
 
     public static void main(String[] args) {

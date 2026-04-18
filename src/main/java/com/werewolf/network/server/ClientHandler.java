@@ -60,8 +60,8 @@ public class ClientHandler implements Runnable, GameStateObserver {
                 break;
             case KILL:
             case VOTE:
-            case PROTECT:
-            case INVESTIGATE:
+            case HEAL:
+            case PEEK:
                 handleGameCommand(message);
                 break;
             default:
