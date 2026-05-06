@@ -73,7 +73,13 @@ public class GameViewController {
 
         // During day voting, every alive player gets to vote
         if (phase == GameState.DAY_VOTING) {
-            model.setCanAct(true);
+            boolean isAlive = model.getAlivePlayers().stream()
+                    .anyMatch(p -> p.getUsername().equals(model.getMyUsername()));
+            if (isAlive) {
+                model.setCanAct(true);
+            } else {
+                model.setCanAct(false);
+            }
         }
     }
 
@@ -121,5 +127,25 @@ public class GameViewController {
         model.setHasActedThisPhase(true);
         model.setCanAct(false);
         model.addEventLog("Vote sent for " + targetUsername + ". Waiting for others...");
+    }
+
+    /**
+     * Dispatches a chat message to other players.
+     * @param message Text contents of the chat message.
+     */
+    public void sendChat(String message) {
+        if (message == null || message.isBlank()) return;
+        
+        if (model.getGamePhase() == GameState.NIGHT) {
+            return;
+        }
+
+        boolean isAlive = model.getAlivePlayers().stream()
+                .anyMatch(p -> p.getUsername().equals(model.getMyUsername()));
+        if (!isAlive) {
+            return;
+        }
+        
+        connectionManager.sendGameCommand(MessageType.CHAT, message, model.getMyUsername());
     }
 }

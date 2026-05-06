@@ -5,6 +5,9 @@ import com.werewolf.client.model.GameModel;
 import com.werewolf.game.GameState;
 import com.werewolf.game.Player;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,6 +16,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -40,15 +44,32 @@ public class GameView {
     private final GameModel model;
     private final GameViewController controller;
 
+    // Root Scene
+    private BorderPane root;
+
+    // Layout panes for dynamic theme
+    private HBox headerPane;
+    private VBox playerPanel;
+    private VBox eventLogPanel;
+    private VBox actionPanelBox;
+
     // Header
     private Label phaseLabel;
     private Label roleLabel;
+    private Label timerLabel;
+
+    // Timer state
+    private Timeline phaseTimer;
+    private int timeRemaining;
+    private GameState currentPhase;
 
     // Player sidebar
     private ListView<String> playerListView;
 
     // Event log
     private ListView<String> eventLogView;
+    private TextField chatField;
+    private Button sendBtn;
 
     // Action panel
     private Label actionPromptLabel;
@@ -76,13 +97,18 @@ public class GameView {
     // ─────────────────────────── Scene construction ───────────────────────────
 
     private Scene buildScene() {
-        BorderPane root = new BorderPane();
+        root = new BorderPane();
         root.setStyle("-fx-background-color: " + BG_DEEP + ";");
 
-        root.setTop(buildHeader());
-        root.setLeft(buildPlayerPanel());
-        root.setCenter(buildEventLog());
-        root.setBottom(buildActionPanel());
+        headerPane = buildHeader();
+        playerPanel = buildPlayerPanel();
+        eventLogPanel = buildEventLog();
+        actionPanelBox = buildActionPanel();
+
+        root.setTop(headerPane);
+        root.setLeft(playerPanel);
+        root.setCenter(eventLogPanel);
+        root.setBottom(actionPanelBox);
 
         return new Scene(root, 960, 680);
     }
@@ -97,6 +123,11 @@ public class GameView {
         phaseLabel.setFont(Font.font("Arial", FontWeight.BOLD, 22));
         phaseLabel.setTextFill(Color.web(GOLD));
 
+        timerLabel = new Label("⏱ 00:00");
+        timerLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        timerLabel.setTextFill(Color.web(GOLD));
+        timerLabel.setVisible(false); // Caché par défaut dans le lobby
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -104,7 +135,7 @@ public class GameView {
         roleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         roleLabel.setTextFill(Color.web(MUTED_BLUE));
 
-        header.getChildren().addAll(phaseLabel, spacer, roleLabel);
+        header.getChildren().addAll(phaseLabel, timerLabel, spacer, roleLabel);
         return header;
     }
 
@@ -134,7 +165,7 @@ public class GameView {
         logPanel.setPadding(new Insets(15));
         logPanel.setStyle("-fx-background-color: " + BG_DEEP + ";");
 
-        Label title = new Label("Événements");
+        Label title = new Label("Événements et Discussion");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 13));
         title.setTextFill(Color.web(MUTED_BLUE));
 
@@ -144,7 +175,27 @@ public class GameView {
         );
         VBox.setVgrow(eventLogView, Priority.ALWAYS);
 
-        logPanel.getChildren().addAll(title, eventLogView);
+        HBox chatInputBox = new HBox(10);
+        chatInputBox.setAlignment(Pos.CENTER_LEFT);
+        
+        chatField = new TextField();
+        chatField.setPromptText("Saisir un message...");
+        chatField.setStyle("-fx-background-color: " + BG_PANEL + "; -fx-text-fill: white;");
+        HBox.setHgrow(chatField, Priority.ALWAYS);
+        
+        sendBtn = new Button("Envoyer");
+        sendBtn.setStyle(buildButtonStyle(MUTED_BLUE));
+        sendBtn.setOnAction(e -> {
+            String msg = chatField.getText().trim();
+            if (!msg.isEmpty()) {
+                controller.sendChat(msg);
+                chatField.clear();
+            }
+        });
+        chatField.setOnAction(e -> sendBtn.fire());
+        chatInputBox.getChildren().addAll(chatField, sendBtn);
+
+        logPanel.getChildren().addAll(title, eventLogView, chatInputBox);
         return logPanel;
     }
 
@@ -201,12 +252,66 @@ public class GameView {
         GameState phase = model.getGamePhase();
         String myRole   = model.getMyRole();
         List<Player> alive = model.getAlivePlayers();
+        boolean isAlive = alive.stream().anyMatch(p -> p.getUsername().equals(model.getMyUsername()));
 
+        updateBackground(phase, isAlive);
         updateHeader(phase, myRole);
         updatePlayerList(alive);
         updateEventLog();
         updateActionPanel(phase, myRole);
+        updateChatPanel(phase);
         if (phase == GameState.GAME_OVER) appendGameOverToLog();
+
+        if (phase != currentPhase) {
+            currentPhase = phase;
+            startTimerForPhase(phase);
+        }
+    }
+
+    private void updateBackground(GameState phase, boolean isAlive) {
+        if (root == null) return;
+        
+        String deepColor, panelColor, headerColor;
+        
+        boolean inGamePhase = phase == GameState.NIGHT || phase == GameState.DAY_DISCUSSION || phase == GameState.DAY_VOTING;
+        if (!isAlive && inGamePhase) {
+            deepColor = "#1c1c1c";
+            panelColor = "#2b2b2b";
+            headerColor = "#383838";
+        } else {
+            switch (phase) {
+                case NIGHT -> {
+                    deepColor = "#05051a";
+                    panelColor = "#0a0a2a";
+                    headerColor = "#10103a";
+                }
+                case DAY_DISCUSSION, DAY_VOTING -> {
+                    deepColor = "#2b3b5b";
+                    panelColor = "#3b4b6b";
+                    headerColor = "#4b5b7b";
+                }
+                case GAME_OVER -> {
+                    deepColor = "#1a0a0a";
+                    panelColor = "#2a1a1a";
+                    headerColor = "#3a2a2a";
+                }
+                default -> {
+                    deepColor = BG_DEEP;
+                    panelColor = BG_PANEL;
+                    headerColor = BG_HEADER;
+                }
+            }
+        }
+        
+        root.setStyle("-fx-background-color: " + deepColor + ";");
+        if (headerPane != null) headerPane.setStyle("-fx-background-color: " + headerColor + ";");
+        if (playerPanel != null) playerPanel.setStyle("-fx-background-color: " + panelColor + ";");
+        if (playerListView != null) playerListView.setStyle("-fx-background-color: " + headerColor + "; -fx-control-inner-background: " + headerColor + ";");
+        if (eventLogPanel != null) eventLogPanel.setStyle("-fx-background-color: " + deepColor + ";");
+        if (eventLogView != null) eventLogView.setStyle("-fx-background-color: " + panelColor + "; -fx-control-inner-background: " + panelColor + ";");
+        if (chatField != null) chatField.setStyle("-fx-background-color: " + panelColor + "; -fx-text-fill: white;");
+        if (actionPanelBox != null) actionPanelBox.setStyle("-fx-background-color: " + headerColor + "; -fx-border-color: #3a3a6e; -fx-border-width: 2 0 0 0;");
+        if (targetListView != null) targetListView.setStyle("-fx-background-color: " + panelColor + "; -fx-control-inner-background: " + panelColor + ";");
     }
 
     private void updateHeader(GameState phase, String myRole) {
@@ -224,13 +329,15 @@ public class GameView {
                 case "Werewolf" -> "🐺 ";
                 case "Seer"     -> "👁️ ";
                 case "Medic"    -> "💊 ";
-                default         -> "🪓 ";
+                case "Villager" -> "🪓 ";
+                default         -> "❓ ";
             };
             String roleColor = switch (myRole) {
                 case "Werewolf" -> "#ff5555";
                 case "Seer"     -> "#55aaff";
                 case "Medic"    -> "#55ee88";
-                default         -> MUTED_BLUE;
+                case "Villager" -> MUTED_BLUE;
+                default         -> "#ffffff";
             };
             roleLabel.setText(roleEmoji + myRole);
             roleLabel.setTextFill(Color.web(roleColor));
@@ -257,9 +364,47 @@ public class GameView {
         }
     }
 
+    private void startTimerForPhase(GameState phase) {
+        if (phaseTimer != null) {
+            phaseTimer.stop();
+        }
+        
+        timeRemaining = switch (phase) {
+            case NIGHT -> 30;           // 30 secondes pour la nuit
+            case DAY_DISCUSSION -> 60;  // 60 secondes pour débattre
+            case DAY_VOTING -> 30;      // 30 secondes pour voter
+            default -> 0;
+        };
+
+        if (timeRemaining > 0) {
+            timerLabel.setVisible(true);
+            timerLabel.setText(formatTime(timeRemaining));
+            phaseTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+                timeRemaining--;
+                if (timeRemaining <= 0) {
+                    timeRemaining = 0;
+                    phaseTimer.stop();
+                }
+                timerLabel.setText(formatTime(timeRemaining));
+            }));
+            phaseTimer.setCycleCount(Timeline.INDEFINITE);
+            phaseTimer.play();
+        } else {
+            timerLabel.setVisible(false);
+        }
+    }
+
+    private String formatTime(int seconds) {
+        int m = seconds / 60;
+        int s = seconds % 60;
+        return String.format("⏱ %02d:%02d", m, s);
+    }
+
     private void updateActionPanel(GameState phase, String myRole) {
-        boolean canAct = model.isCanAct() && !model.isHasActedThisPhase();
         List<Player> alive = model.getAlivePlayers();
+        boolean isAlive = alive.stream().anyMatch(p -> p.getUsername().equals(model.getMyUsername()));
+        boolean canAct = model.isCanAct() && !model.isHasActedThisPhase() && isAlive;
+
         List<String> targets = alive.stream()
             .map(Player::getUsername)
             .filter(name -> !name.equals(model.getMyUsername()))
@@ -275,10 +420,14 @@ public class GameView {
                         case "Werewolf" -> "🐺 Choisissez une victime à éliminer :";
                         case "Seer"     -> "👁️ Choisissez un joueur à investiguer :";
                         case "Medic"    -> "💊 Choisissez un joueur à protéger :";
-                        default -> "";
+                        default -> "🌙 Phase de nuit — fermez les yeux…";
                     };
                     actionPromptLabel.setText(prompt);
-                    showTargetList(targets, "Confirmer");
+                    if (prompt.contains("fermez")) {
+                        hideTargetList();
+                    } else {
+                        showTargetList(targets, "Confirmer");
+                    }
                 }
             }
             case DAY_DISCUSSION -> {
@@ -286,8 +435,11 @@ public class GameView {
                 hideTargetList();
             }
             case DAY_VOTING -> {
-                if (canAct) {
-                    actionPromptLabel.setText("🗳️ Votez pour éliminer un suspect :");
+                if (!isAlive) {
+                    actionPromptLabel.setText("💀 Vous êtes éliminé. Vous ne pouvez pas voter.");
+                    hideTargetList();
+                } else if (canAct) {
+                    actionPromptLabel.setText("🗳️ Sélectionnez un suspect puis cliquez sur Voter :");
                     showTargetList(targets, "Voter");
                 } else {
                     actionPromptLabel.setText("🗳️ Vote envoyé. En attente des autres joueurs…");
@@ -302,6 +454,24 @@ public class GameView {
                 actionPromptLabel.setText("En attente…");
                 hideTargetList();
             }
+        }
+    }
+
+    private void updateChatPanel(GameState phase) {
+        if (chatField == null || sendBtn == null) return;
+        List<Player> alive = model.getAlivePlayers();
+        boolean isAlive = alive.stream().anyMatch(p -> p.getUsername().equals(model.getMyUsername()));
+
+        boolean canChat = isAlive && phase != GameState.NIGHT;
+        chatField.setDisable(!canChat);
+        sendBtn.setDisable(!canChat);
+
+        if (!isAlive) {
+            chatField.setPromptText("💀 Les morts ne parlent pas...");
+        } else if (phase == GameState.NIGHT) {
+            chatField.setPromptText("🌙 Le village dort...");
+        } else {
+            chatField.setPromptText("Saisir un message...");
         }
     }
 
@@ -346,7 +516,10 @@ public class GameView {
 
     private void handleActionClick() {
         String selected = targetListView.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
+        if (selected == null) {
+            actionPromptLabel.setText("⚠️ Veuillez sélectionner un joueur !");
+            return;
+        }
 
         GameState phase = model.getGamePhase();
         if (phase == GameState.NIGHT) {

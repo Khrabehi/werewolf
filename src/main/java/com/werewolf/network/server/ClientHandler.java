@@ -100,6 +100,9 @@ public class ClientHandler implements Runnable, GameStateObserver {
             case PEEK:
                 handleGameCommand(message);
                 break;
+            case CHAT:
+                handleChat(message);
+                break;
             default:
                 System.out.println("Type de message non géré : " + message.getType());
                 break;
@@ -188,6 +191,26 @@ public class ClientHandler implements Runnable, GameStateObserver {
             out.writeObject(ack);
             out.flush();
         }
+    }
+
+    private void handleChat(Message message) throws IOException {
+        if (gameSession == null) return;
+
+        Object content = message.getContent();
+        if (!(content instanceof GameCommand)) return;
+
+        GameCommand cmd = (GameCommand) content;
+        // Le texte du message est stocké dans le champ targetPlayerId par le client
+        String chatText = cmd.getTargetPlayerId();
+
+        Player sender = gameSession.getPlayer(playerId);
+        if (sender == null || !sender.isAlive()) return;
+
+        if (gameSession.getCurrentPhase() == com.werewolf.game.GameState.NIGHT) {
+            return; // Pas de discussion la nuit pour les joueurs normaux
+        }
+
+        gameSession.notifySessionUpdate("[" + sender.getUsername() + "] : " + chatText);
     }
 
     private void handleStartGame() throws IOException {
