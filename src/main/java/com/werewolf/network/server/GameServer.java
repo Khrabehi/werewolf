@@ -8,13 +8,14 @@ import javax.net.ssl.SSLSocket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.werewolf.game.GameSession;
+import com.werewolf.game.Player;
 import com.werewolf.security.CertificateManager;
 import com.werewolf.security.SSLContextFactory;
 
 public class GameServer {
     private static final int PORT = 8443; // Standard port for HTTPS
     private static final int MAX_PLAYERS = 10;
-
     private static final String STORE_PASSWORD = loadStorePassword();
 
     private static String loadStorePassword() {
@@ -47,22 +48,30 @@ public class GameServer {
             SSLServerSocketFactory ssf = sslContext.getServerSocketFactory();
             try (SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(PORT)) {
 
-                // Forces the server to reject any connection from a client that does not
-                // present a certificate signed by our CA.
                 serverSocket.setNeedClientAuth(true);
 
                 System.out.println("Werewolf Secure Server (mTLS) started on port " + PORT);
                 System.out.println("Waiting for secure players (Max " + MAX_PLAYERS + ")...");
 
+                final GameSession gameSession = new GameSession("main-session");
                 while (true) {
-                    // Accept the connection and explicitly start the TLS handshake to fail fast
-                    // on missing/invalid client certificates before passing to the handler
                     SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
                     clientSocket.startHandshake();
-                    System.out.println("Encrypted connection established with: " + clientSocket.getInetAddress());
+                    System.out.println("Connection from : " + clientSocket.getInetAddress());
 
-                    // The ClientHandler handles the stream as before (encryption is transparent) to it
-                    ClientHandler handler = new ClientHandler(clientSocket);
+                    if (gameSession.getPlayers().size() >= MAX_PLAYERS) {
+                        System.out.println("Session full. Rejecting connection from: " + clientSocket.getInetAddress());
+                        clientSocket.close();
+                        continue;
+                    }
+
+                    String tempPlayerId = "Player-" + clientSocket.getPort();
+
+                    Player newPlayer = new Player(tempPlayerId, tempPlayerId);
+                    gameSession.addPlayer(newPlayer);
+
+                    ClientHandler handler = new ClientHandler(clientSocket, tempPlayerId, gameSession);
+
                     threadPool.execute(handler);
                 }
             }
