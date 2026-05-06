@@ -15,6 +15,7 @@ import com.werewolf.network.shared.GameCommand;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -96,14 +97,29 @@ public class ConnectionManager {
         socket.startHandshake();
 
         out = new ObjectOutputStream(socket.getOutputStream());
+        out.flush();
         in = new ObjectInputStream(socket.getInputStream());
+
+        sendJoinGame(config.getUsername());
+
+        Message joinResponse = awaitJoinResponse();
+        if (joinResponse == null) {
+            disconnect();
+            throw new IOException("Join timed out or failed");
+        }
+
+        if (joinResponse.getType() == MessageType.ERROR) {
+            String err = joinResponse.getContent() != null
+                ? String.valueOf(joinResponse.getContent())
+                : "Username rejected by server";
+            disconnect();
+            throw new IOException(err);
+        }
 
         model.setStatusMessage("Successfully connected to server!");
         model.setIsConnecting(false);
 
         startListener();
-        sendJoinGame(config.getUsername());
-
         onConnectionResult.accept(true);
     }
 
@@ -138,6 +154,30 @@ public class ConnectionManager {
             out.flush();
         } catch (IOException e) {
             handleConnectionError(e);
+        }
+    }
+
+    private Message awaitJoinResponse() throws IOException {
+        int previousTimeout = socket.getSoTimeout();
+        socket.setSoTimeout(5000);
+        try {
+            while (true) {
+                Object incoming = in.readObject();
+                if (incoming instanceof Message) {
+                    Message message = (Message) incoming;
+                    if (message.getType() == MessageType.PLAYER_LIST_UPDATE || message.getType() == MessageType.ERROR) {
+                        handleIncomingMessage(message);
+                        return message;
+                    }
+                    handleIncomingMessage(message);
+                }
+            }
+        } catch (SocketTimeoutException e) {
+            return null;
+        } catch (ClassNotFoundException e) {
+            throw new IOException("Failed to read join response", e);
+        } finally {
+            socket.setSoTimeout(previousTimeout);
         }
     }
 

@@ -28,6 +28,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
     private GameSession gameSession;
     private String playerId;
     private final GameManager gameManager;
+    private volatile boolean joinedGame = false;
 
     public ClientHandler(Socket socket, String playerId, GameSession session, GameManager gameManager) {
         this.socket = socket;
@@ -42,6 +43,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
     public void run() {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
+            out.flush();
             in = new ObjectInputStream(socket.getInputStream());
 
             System.out.println("Nouveau client authentifié : " + playerId);
@@ -59,7 +61,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
             // Notifie qu'une connexion a été perdu 
             PlayerConnectionManager.unregisterConnection(playerId);
 
-            if (gameSession != null && playerId != null) {
+            if (joinedGame && gameSession != null && playerId != null) {
                 gameSession.removePlayer(playerId);
 
                 // Diffuse la liste de joueurs mise à jour
@@ -137,6 +139,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
 
         Player newPlayer = new Player(playerId, username);
         gameSession.addPlayer(newPlayer);
+        joinedGame = true;
 
         // Assigne le role d'admin au premier joueur
         gameSession.assignAdminIfNeeded();

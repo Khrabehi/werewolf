@@ -40,7 +40,7 @@ mvn test
 
 This command runs all unit tests in `src/test/java`.
 
-## Architecture (simple overview)
+## Architecture
 
 - Client UI: JavaFX views in `com.werewolf.client.view` for the main menu and in-game screen.
 - Client logic: Controllers and models in `com.werewolf.client.controller` and `com.werewolf.client.model`.
