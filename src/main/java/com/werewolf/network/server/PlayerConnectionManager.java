@@ -36,6 +36,19 @@ public class PlayerConnectionManager {
         });
     }
 
+    // Envoie un message a un joueur specifique
+    public static void sendToPlayer(String playerId, Message message) {
+        ClientHandler handler = activeConnections.get(playerId);
+        if (handler == null) {
+            return;
+        }
+        try {
+            handler.sendMessage(message);
+        } catch (IOException e) {
+            System.err.println("Failed to send to client " + playerId + ": " + e.getMessage());
+        }
+    }
+
     // Broadcast un message à tous les clients sauf un
     public static void broadcastExcept(String excludePlayerId, Message message) {
         activeConnections.entrySet().stream()

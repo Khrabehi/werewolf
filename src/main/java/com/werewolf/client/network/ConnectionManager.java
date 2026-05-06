@@ -2,6 +2,7 @@ package com.werewolf.client.network;
 
 import com.werewolf.client.model.ConnectionConfig;
 import com.werewolf.client.model.MainMenuModel;
+import com.werewolf.event.GameStateUpdate;
 import com.werewolf.network.shared.JoinGameRequest;
 import com.werewolf.network.shared.Message;
 import com.werewolf.network.shared.MessageType;
@@ -160,13 +161,36 @@ public class ConnectionManager {
     }
 
     private void handleIncomingMessage(Message message) {
-        if (message.getType() == MessageType.PLAYER_LIST_UPDATE) {
-            Object content = message.getContent();
-            if (content instanceof PlayerListUpdate) {
-                PlayerListUpdate update = (PlayerListUpdate) content;
-                model.setPlayerNames(update.getPlayerNames());
-                model.setAdminName(update.getAdminName());
-            }
+        switch (message.getType()) {
+            case PLAYER_LIST_UPDATE:
+                Object content = message.getContent();
+                if (content instanceof PlayerListUpdate) {
+                    PlayerListUpdate update = (PlayerListUpdate) content;
+                    model.setPlayerNames(update.getPlayerNames());
+                    model.setAdminName(update.getAdminName());
+                }
+                break;
+            case GAME_STARTED:
+                model.setStatusMessage("Game started.");
+                model.setGameStarted(true);
+                break;
+            case GAME_STATE_UPDATE:
+                Object updateContent = message.getContent();
+                if (updateContent instanceof GameStateUpdate) {
+                    model.setStatusMessage(((GameStateUpdate) updateContent).getMessage());
+                } else if (updateContent != null) {
+                    model.setStatusMessage(updateContent.toString());
+                }
+                break;
+            case ERROR:
+                if (message.getContent() != null) {
+                    model.setStatusMessage("Server error: " + message.getContent());
+                } else {
+                    model.setStatusMessage("Server error.");
+                }
+                break;
+            default:
+                break;
         }
     }
 

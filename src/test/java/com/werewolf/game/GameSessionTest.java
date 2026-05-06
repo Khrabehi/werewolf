@@ -131,13 +131,13 @@ public class GameSessionTest {
     @Test
     @DisplayName("Can update game phase")
     public void testUpdatePhase() {
-        assertEquals(GamePhase.LOBBY, session.getCurrentPhase());
+        assertEquals(GameState.LOBBY, session.getCurrentPhase());
         
-        session.updatePhase(GamePhase.NIGHT);
-        assertEquals(GamePhase.NIGHT, session.getCurrentPhase());
+        session.updatePhase(GameState.NIGHT);
+        assertEquals(GameState.NIGHT, session.getCurrentPhase());
         
-        session.updatePhase(GamePhase.DAY_VOTING);
-        assertEquals(GamePhase.DAY_VOTING, session.getCurrentPhase());
+        session.updatePhase(GameState.DAY_VOTING);
+        assertEquals(GameState.DAY_VOTING, session.getCurrentPhase());
     }
     
     @Test
@@ -149,7 +149,7 @@ public class GameSessionTest {
         assertTrue(player1.isProtected());
         assertTrue(player2.isProtected());
         
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         assertFalse(player1.isProtected(), "Protections should be reset on night phase");
         assertFalse(player2.isProtected());
@@ -203,14 +203,14 @@ public class GameSessionTest {
     @Test
     @DisplayName("Observer receives notification with phase")
     public void testObserverReceivesPhase() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         List<GameStateUpdate> updates = new ArrayList<>();
         session.subscribe(updates::add);
         
         session.notifySessionUpdate("Night phase started");
         
-        assertEquals(GamePhase.NIGHT, updates.get(0).getNewPhase());
+        assertEquals(GameState.NIGHT, updates.get(0).getNewPhase());
     }
     
     @Test
@@ -273,6 +273,6 @@ public class GameSessionTest {
     @DisplayName("Initial phase is LOBBY")
     public void testInitialPhaseIsLobby() {
         GameSession newSession = new GameSession("new-session");
-        assertEquals(GamePhase.LOBBY, newSession.getCurrentPhase());
+        assertEquals(GameState.LOBBY, newSession.getCurrentPhase());
     }
 }

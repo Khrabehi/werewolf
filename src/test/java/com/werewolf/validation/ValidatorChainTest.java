@@ -33,7 +33,7 @@ public class ValidatorChainTest {
         session.addPlayer(villager);
         
         killCommand = new GameCommand("KILL", "v1");
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
     }
     
     // ============== PLAYER EXISTENCE VALIDATOR ==============
@@ -117,7 +117,7 @@ public class ValidatorChainTest {
     @Test
     @DisplayName("GameStateValidator accepts kill at night")
     public void testGameStateValidatorAcceptsKillAtNight() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         GameStateValidator validator = new GameStateValidator();
         
         ValidationResult result = validator.validate(killCommand, werewolf, session);
@@ -127,7 +127,7 @@ public class ValidatorChainTest {
     @Test
     @DisplayName("GameStateValidator rejects kill during day")
     public void testGameStateValidatorRejectsKillDuringDay() {
-        session.updatePhase(GamePhase.DAY_DISCUSSION);
+        session.updatePhase(GameState.DAY_DISCUSSION);
         GameStateValidator validator = new GameStateValidator();
         
         ValidationResult result = validator.validate(killCommand, werewolf, session);
@@ -138,7 +138,7 @@ public class ValidatorChainTest {
     @Test
     @DisplayName("GameStateValidator rejects vote during night")
     public void testGameStateValidatorRejectsVoteDuringNight() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         GameCommand voteCommand = new GameCommand("VOTE", "v1");
         GameStateValidator validator = new GameStateValidator();
         
@@ -150,7 +150,7 @@ public class ValidatorChainTest {
     @Test
     @DisplayName("GameStateValidator accepts vote during day voting")
     public void testGameStateValidatorAcceptsVoteDuringDayVoting() {
-        session.updatePhase(GamePhase.DAY_VOTING);
+        session.updatePhase(GameState.DAY_VOTING);
         GameCommand voteCommand = new GameCommand("VOTE", "w1");
         GameStateValidator validator = new GameStateValidator();
         
@@ -212,7 +212,7 @@ public class ValidatorChainTest {
              .setNext(new GameStateValidator())
              .setNext(new TargetValidationValidator());
         
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         ValidationResult result = chain.validate(killCommand, werewolf, session);
         
         assertTrue(result.isValid(), "Valid command should pass full chain");
@@ -228,7 +228,7 @@ public class ValidatorChainTest {
              .setNext(new TargetValidationValidator());
         
         werewolf.setAlive(false);  // This should be caught by PlayerAliveValidator
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         ValidationResult result = chain.validate(killCommand, werewolf, session);
         

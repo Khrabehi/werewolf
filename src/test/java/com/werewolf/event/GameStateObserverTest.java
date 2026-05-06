@@ -1,6 +1,6 @@
 package com.werewolf.event;
 
-import com.werewolf.game.GamePhase;
+import com.werewolf.game.GameState;
 import com.werewolf.game.Player;
 import com.werewolf.game.role.VillagerRole;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ public class GameStateObserverTest {
     
     private GameStateUpdate testUpdate;
     private List<Player> testPlayers;
-    private GamePhase testPhase;
+    private GameState testPhase;
     
     // Mock observer implementation for testing
     private static class MockGameStateObserver implements GameStateObserver {
@@ -55,7 +55,7 @@ public class GameStateObserverTest {
     
     @BeforeEach
     public void setUp() {
-        testPhase = GamePhase.NIGHT;
+        testPhase = GameState.NIGHT;
         testPlayers = new ArrayList<>();
         Player p1 = new Player("p1", "Alice");
         p1.setRole(new VillagerRole());
@@ -108,9 +108,9 @@ public class GameStateObserverTest {
     public void testObserverReceivesMultipleUpdates() {
         MockGameStateObserver observer = new MockGameStateObserver();
         
-        GameStateUpdate update1 = new GameStateUpdate("Update 1", GamePhase.NIGHT, testPlayers);
-        GameStateUpdate update2 = new GameStateUpdate("Update 2", GamePhase.DAY_DISCUSSION, testPlayers);
-        GameStateUpdate update3 = new GameStateUpdate("Update 3", GamePhase.DAY_VOTING, testPlayers);
+        GameStateUpdate update1 = new GameStateUpdate("Update 1", GameState.NIGHT, testPlayers);
+        GameStateUpdate update2 = new GameStateUpdate("Update 2", GameState.DAY_DISCUSSION, testPlayers);
+        GameStateUpdate update3 = new GameStateUpdate("Update 3", GameState.DAY_VOTING, testPlayers);
         
         observer.onGameStateUpdate(update1);
         observer.onGameStateUpdate(update2);
@@ -125,8 +125,8 @@ public class GameStateObserverTest {
     public void testObserverLastUpdateIsMostRecent() {
         MockGameStateObserver observer = new MockGameStateObserver();
         
-        GameStateUpdate update1 = new GameStateUpdate("First", GamePhase.NIGHT, testPlayers);
-        GameStateUpdate update2 = new GameStateUpdate("Second", GamePhase.DAY_DISCUSSION, testPlayers);
+        GameStateUpdate update1 = new GameStateUpdate("First", GameState.NIGHT, testPlayers);
+        GameStateUpdate update2 = new GameStateUpdate("Second", GameState.DAY_DISCUSSION, testPlayers);
         
         observer.onGameStateUpdate(update1);
         assertEquals(update1, observer.getLastUpdate());
@@ -176,8 +176,8 @@ public class GameStateObserverTest {
         MockGameStateObserver observer1 = new MockGameStateObserver();
         MockGameStateObserver observer2 = new MockGameStateObserver();
         
-        GameStateUpdate update1 = new GameStateUpdate("Update 1", GamePhase.NIGHT, testPlayers);
-        GameStateUpdate update2 = new GameStateUpdate("Update 2", GamePhase.DAY_VOTING, testPlayers);
+        GameStateUpdate update1 = new GameStateUpdate("Update 1", GameState.NIGHT, testPlayers);
+        GameStateUpdate update2 = new GameStateUpdate("Update 2", GameState.DAY_VOTING, testPlayers);
         
         observer1.onGameStateUpdate(update1);
         observer2.onGameStateUpdate(update2);
@@ -223,11 +223,11 @@ public class GameStateObserverTest {
     @DisplayName("Observer receives update with phase")
     public void testObserverReceivesPhase() {
         MockGameStateObserver observer = new MockGameStateObserver();
-        GameStateUpdate update = new GameStateUpdate("Update", GamePhase.DAY_VOTING, testPlayers);
+        GameStateUpdate update = new GameStateUpdate("Update", GameState.DAY_VOTING, testPlayers);
         
         observer.onGameStateUpdate(update);
         
-        assertEquals(GamePhase.DAY_VOTING, observer.getLastUpdate().getNewPhase());
+        assertEquals(GameState.DAY_VOTING, observer.getLastUpdate().getNewPhase());
     }
     
     @Test
@@ -260,22 +260,22 @@ public class GameStateObserverTest {
     @DisplayName("Observer receives night phase transitions")
     public void testNightPhaseTransition() {
         MockGameStateObserver observer = new MockGameStateObserver();
-        GameStateUpdate nightUpdate = new GameStateUpdate("Night phase", GamePhase.NIGHT, testPlayers);
+        GameStateUpdate nightUpdate = new GameStateUpdate("Night phase", GameState.NIGHT, testPlayers);
         
         observer.onGameStateUpdate(nightUpdate);
         
-        assertEquals(GamePhase.NIGHT, observer.getLastUpdate().getNewPhase());
+        assertEquals(GameState.NIGHT, observer.getLastUpdate().getNewPhase());
     }
     
     @Test
     @DisplayName("Observer receives day phase transitions")
     public void testDayPhaseTransition() {
         MockGameStateObserver observer = new MockGameStateObserver();
-        GameStateUpdate dayUpdate = new GameStateUpdate("Day phase", GamePhase.DAY_VOTING, testPlayers);
+        GameStateUpdate dayUpdate = new GameStateUpdate("Day phase", GameState.DAY_VOTING, testPlayers);
         
         observer.onGameStateUpdate(dayUpdate);
         
-        assertEquals(GamePhase.DAY_VOTING, observer.getLastUpdate().getNewPhase());
+        assertEquals(GameState.DAY_VOTING, observer.getLastUpdate().getNewPhase());
     }
     
     @Test
@@ -283,18 +283,18 @@ public class GameStateObserverTest {
     public void testPhaseChanges() {
         MockGameStateObserver observer = new MockGameStateObserver();
         
-        GameStateUpdate nightUpdate = new GameStateUpdate("Night", GamePhase.NIGHT, testPlayers);
-        GameStateUpdate dayUpdate = new GameStateUpdate("Day", GamePhase.DAY_DISCUSSION, testPlayers);
-        GameStateUpdate votingUpdate = new GameStateUpdate("Voting", GamePhase.DAY_VOTING, testPlayers);
+        GameStateUpdate nightUpdate = new GameStateUpdate("Night", GameState.NIGHT, testPlayers);
+        GameStateUpdate dayUpdate = new GameStateUpdate("Day", GameState.DAY_DISCUSSION, testPlayers);
+        GameStateUpdate votingUpdate = new GameStateUpdate("Voting", GameState.DAY_VOTING, testPlayers);
         
         observer.onGameStateUpdate(nightUpdate);
-        assertEquals(GamePhase.NIGHT, observer.getLastUpdate().getNewPhase());
+        assertEquals(GameState.NIGHT, observer.getLastUpdate().getNewPhase());
         
         observer.onGameStateUpdate(dayUpdate);
-        assertEquals(GamePhase.DAY_DISCUSSION, observer.getLastUpdate().getNewPhase());
+        assertEquals(GameState.DAY_DISCUSSION, observer.getLastUpdate().getNewPhase());
         
         observer.onGameStateUpdate(votingUpdate);
-        assertEquals(GamePhase.DAY_VOTING, observer.getLastUpdate().getNewPhase());
+        assertEquals(GameState.DAY_VOTING, observer.getLastUpdate().getNewPhase());
         
         assertEquals(3, observer.getUpdateCount());
     }

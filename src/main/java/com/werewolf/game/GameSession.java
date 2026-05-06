@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class GameSession {
     private String sessionId;
     private Map<String, Player> players;
-    private GamePhase currentPhase;
+    private GameState currentPhase;
     private Map<String, String> currentVotes = new ConcurrentHashMap<>();
     private final List<String> joinOrder = new CopyOnWriteArrayList<>();
     private String adminId;
@@ -21,7 +21,7 @@ public class GameSession {
     public GameSession(String sessionId) {
         this.sessionId = sessionId;
         this.players = new ConcurrentHashMap<>();
-        this.currentPhase = GamePhase.LOBBY;
+        this.currentPhase = GameState.LOBBY;
     }
 
     public void addPlayer(Player player) {
@@ -88,22 +88,35 @@ public class GameSession {
     }
 
     public void notifySessionUpdate(String message) {
+        notifySessionUpdate(message, null);
+    }
+
+    public void notifySessionUpdate(String message, Map<String, Object> metadata) {
         GameStateUpdate update = new GameStateUpdate(
             message,
             this.currentPhase,
-            getAlivePlayers()
+            getAlivePlayers(),
+            metadata
         );
-        
+
         observers.forEach(observer -> observer.onGameStateUpdate(update));
     }
 
     // --- Logique de Jeu ---
-    public void updatePhase(GamePhase phase) {
+    public void updatePhase(GameState phase) {
+        updatePhase(phase, "Phase updated to: " + phase, null);
+    }
+
+    public void updatePhase(GameState phase, String message) {
+        updatePhase(phase, message, null);
+    }
+
+    public void updatePhase(GameState phase, String message, Map<String, Object> metadata) {
         this.currentPhase = phase;
-        if (phase == GamePhase.NIGHT) {
+        if (phase == GameState.NIGHT) {
             resetProtections();
         }
-        notifySessionUpdate("Phase updated to: " + phase);
+        notifySessionUpdate(message, metadata);
     }
 
     private void resetProtections() {
@@ -114,11 +127,30 @@ public class GameSession {
         currentVotes.put(voterId, targetId);
     }
 
+    public Map<String, String> getCurrentVotes() {
+        return new ConcurrentHashMap<>(currentVotes);
+    }
+
+    public void resetVotes() {
+        currentVotes.clear();
+    }
+
     public void sendPrivateMessage(String playerId, String message) {
         System.out.println("[PRIVATE to " + playerId + "] " + message);
     }
 
-    public GamePhase getCurrentPhase() { return currentPhase; }
+    public GameState getCurrentPhase() { return currentPhase; }
     public String getSessionId() { return sessionId; }
     public String getAdminId() { return adminId; }
+
+    public long countAliveWerewolves() {
+        return getAlivePlayers().stream()
+            .filter(p -> p.getRole() != null && "Werewolf".equals(p.getRole().getName()))
+            .count();
+    }
+
+    public long countAliveVillagers() {
+        long alive = getAlivePlayers().size();
+        return alive - countAliveWerewolves();
+    }
 }

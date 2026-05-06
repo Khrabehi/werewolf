@@ -14,6 +14,7 @@ public class MainMenuModel {
     private List<String> playerNames;
     private String adminName;
     private boolean isAdmin;
+    private boolean gameStarted;
 
     private final List<PropertyChangeListener> listeners = new ArrayList<>();
 
@@ -25,6 +26,7 @@ public class MainMenuModel {
         this.playerNames = new ArrayList<>();
         this.adminName = null;
         this.isAdmin = false;
+        this.gameStarted = false;
     }
 
     public void setUsername(String username) {
@@ -77,6 +79,12 @@ public class MainMenuModel {
         notifyListeners("isAdmin", old, isAdmin);
     }
 
+    public void setGameStarted(boolean started) {
+        boolean old = this.gameStarted;
+        this.gameStarted = started;
+        notifyListeners("gameStarted", old, started);
+    }
+
     public String getUsername() {
         return username;
     }
@@ -107,6 +115,10 @@ public class MainMenuModel {
 
     public boolean isAdmin() {
         return isAdmin;
+    }
+
+    public boolean isGameStarted() {
+        return gameStarted;
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

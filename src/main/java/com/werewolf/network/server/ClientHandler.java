@@ -2,6 +2,7 @@ package com.werewolf.network.server;
 
 import com.werewolf.event.GameStateObserver;
 import com.werewolf.event.GameStateUpdate;
+import com.werewolf.game.GameManager;
 import com.werewolf.game.GameSession;
 import com.werewolf.game.Player;
 import com.werewolf.network.shared.GameCommand;
@@ -10,7 +11,6 @@ import com.werewolf.network.shared.Message;
 import com.werewolf.network.shared.MessageType;
 import com.werewolf.network.shared.PlayerListUpdate;
 import com.werewolf.validation.CommandExecutionResult;
-import com.werewolf.validation.CommandOrchestrator;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -26,14 +26,14 @@ public class ClientHandler implements Runnable, GameStateObserver {
     private final Object outLock = new Object();
 
     private GameSession gameSession;
-    private CommandOrchestrator orchestrator;
     private String playerId;
+    private final GameManager gameManager;
 
-    public ClientHandler(Socket socket, String playerId, GameSession session) {
+    public ClientHandler(Socket socket, String playerId, GameSession session, GameManager gameManager) {
         this.socket = socket;
         this.playerId = playerId;
         this.gameSession = session;
-        this.orchestrator = new CommandOrchestrator(session);
+        this.gameManager = gameManager;
 
         session.subscribe(this);
     }
@@ -90,6 +90,9 @@ public class ClientHandler implements Runnable, GameStateObserver {
                 break;
             case JOIN_GAME:
                 handleJoinGame(message);
+                break;
+            case START_GAME:
+                handleStartGame();
                 break;
             case KILL:
             case VOTE:
@@ -166,8 +169,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
 
         GameCommand cmd = (GameCommand) content;
 
-        // Orchestrator gère validation + exécution
-        CommandExecutionResult result = orchestrator.executeCommand(playerId, cmd);
+        CommandExecutionResult result = gameManager.handleCommand(playerId, cmd);
 
         if (!result.isSuccess()) {
             Message errorResponse = new Message(
@@ -178,6 +180,34 @@ public class ClientHandler implements Runnable, GameStateObserver {
                 out.writeObject(errorResponse);
                 out.flush();
             }
+            return;
+        }
+
+        Message ack = new Message(MessageType.GAME_COMMAND_RESPONSE, "Server", "Command accepted");
+        synchronized (outLock) {
+            out.writeObject(ack);
+            out.flush();
+        }
+    }
+
+    private void handleStartGame() throws IOException {
+        CommandExecutionResult result = gameManager.startGame(playerId);
+        if (!result.isSuccess()) {
+            Message errorResponse = new Message(
+                    MessageType.ERROR,
+                    "Server",
+                    result.getErrorMessage());
+            synchronized (outLock) {
+                out.writeObject(errorResponse);
+                out.flush();
+            }
+            return;
+        }
+
+        Message ack = new Message(MessageType.GAME_STARTED, "Server", "Game started");
+        synchronized (outLock) {
+            out.writeObject(ack);
+            out.flush();
         }
     }
 
