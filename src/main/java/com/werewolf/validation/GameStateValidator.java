@@ -1,6 +1,6 @@
 package com.werewolf.validation;
 
-import com.werewolf.game.GamePhase;
+import com.werewolf.game.GameState;
 import com.werewolf.game.GameSession;
 import com.werewolf.game.Player;
 import com.werewolf.network.shared.GameCommand;
@@ -10,14 +10,14 @@ public class GameStateValidator extends AbstractValidator {
     public ValidationResult validate(GameCommand cmd, Player actor, GameSession session) {
         String actionType = cmd.getActionType();
 
-        if ("KILL".equals(actionType) && session.getCurrentPhase() != GamePhase.NIGHT) {
-            return ValidationResult.INVALID("Kill action only allowed at night");
+        if ("KILL".equals(actionType) && session.getCurrentPhase() != GameState.NIGHT) {
+            return ValidationResult.INVALID("L'action d'éliminer n'est autorisée que la nuit");
         }
-        if ("VOTE".equals(actionType) && session.getCurrentPhase() != GamePhase.DAY_VOTING) {
-            return ValidationResult.INVALID("Vote action only allowed during day voting phase");
+        if ("VOTE".equals(actionType) && session.getCurrentPhase() != GameState.DAY_VOTING) {
+            return ValidationResult.INVALID("Le vote n'est autorisé que pendant la phase de vote de jour");
         }
-        if (("HEAL".equals(actionType) || "PEEK".equals(actionType)) && session.getCurrentPhase() != GamePhase.NIGHT) {
-            return ValidationResult.INVALID(actionType + " action only allowed at night");
+        if (("HEAL".equals(actionType) || "PEEK".equals(actionType)) && session.getCurrentPhase() != GameState.NIGHT) {
+            return ValidationResult.INVALID("L'action " + actionType + " n'est autorisée que la nuit");
         }
 
         return callNext(cmd, actor, session);

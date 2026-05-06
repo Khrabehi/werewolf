@@ -28,14 +28,13 @@ public class CommandOrchestrator {
     }
 
     public CommandExecutionResult executeCommand(String playerId, GameCommand cmd) {
-        Player actor = gameSession.getPlayer(playerId);
-        
-        ValidationResult validation = validationChain.validate(cmd, actor, gameSession);
+        ValidationResult validation = validateCommand(playerId, cmd);
         if (!validation.isValid()) {
             return CommandExecutionResult.failed(validation.getErrorMessage());
         }
         
         try {
+            Player actor = gameSession.getPlayer(playerId);
             Player target = gameSession.getPlayer(cmd.getTargetPlayerId());
             GameAction action = actionFactory.getAction(cmd.getActionType());
             action.execute(actor, target, gameSession);
@@ -43,7 +42,12 @@ public class CommandOrchestrator {
             return CommandExecutionResult.success();
         } catch (IllegalArgumentException e) {
             System.err.println("Command execution failed for player " + playerId + ": " + e.getMessage());
-            return CommandExecutionResult.failed("Invalid command parameters.");
+            return CommandExecutionResult.failed("Paramètres de commande invalides.");
         }
+    }
+
+    public ValidationResult validateCommand(String playerId, GameCommand cmd) {
+        Player actor = gameSession.getPlayer(playerId);
+        return validationChain.validate(cmd, actor, gameSession);
     }
 }

@@ -1,6 +1,6 @@
 package com.werewolf.event;
 
-import com.werewolf.game.GamePhase;
+import com.werewolf.game.GameState;
 import com.werewolf.game.Player;
 
 import java.io.Serializable;
@@ -12,22 +12,29 @@ public class GameStateUpdate implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String message;
-    private GamePhase newPhase;
+    private GameState newPhase;
     private List<Player> alivePlayers;
     private Map<String, Object> metadata;
 
-    public GameStateUpdate(String message, GamePhase phase, List<Player> alive) {
+    public GameStateUpdate(String message, GameState phase, List<Player> alive) {
         this.message = message;
         this.newPhase = phase;
         this.alivePlayers = alive;
         this.metadata = new HashMap<>(); // Initialisation pour éviter les NullPointerException
     }
 
+    public GameStateUpdate(String message, GameState phase, List<Player> alive, Map<String, Object> metadata) {
+        this.message = message;
+        this.newPhase = phase;
+        this.alivePlayers = alive;
+        this.metadata = (metadata != null) ? new HashMap<>(metadata) : new HashMap<>();
+    }
+
     public String getMessage() {
         return message;
     }
 
-    public GamePhase getNewPhase() {
+    public GameState getNewPhase() {
         return newPhase;
     }
 

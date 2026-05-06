@@ -39,3 +39,12 @@ mvn test
 ```
 
 This command runs all unit tests in `src/test/java`.
+
+## Architecture
+
+- Client UI: JavaFX views in `com.werewolf.client.view` for the main menu and in-game screen.
+- Client logic: Controllers and models in `com.werewolf.client.controller` and `com.werewolf.client.model`.
+- Network: `ConnectionManager` connects to the server and sends/receives serialized `Message` objects.
+- Server: `GameServer` accepts clients, `ClientHandler` handles per-client messages.
+- Game core: `GameSession` holds players/state, `GameManager` drives the game loop and phases.
+- Updates: Server broadcasts `GAME_STATE_UPDATE` to clients to drive UI changes.

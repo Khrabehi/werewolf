@@ -1,8 +1,9 @@
 package com.werewolf.game.role;
 
+import java.io.Serializable;
 import java.util.List;
 
-public interface PlayerRole {
+public interface PlayerRole extends Serializable {
     String getName();
 
     /**

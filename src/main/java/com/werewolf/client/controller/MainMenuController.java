@@ -31,6 +31,11 @@ public class MainMenuController {
             return usernameResult;
         }
 
+        if (isUsernameAlreadyTaken(model.getUsername())) {
+            model.setStatusMessage("Username already taken");
+            return ValidationResult.INVALID("Username already taken");
+        }
+
         ValidationResult ipResult = ipValidator.validate(model.getIpAddress());
         if (!ipResult.isValid()) {
             model.setStatusMessage(ipResult.getErrorMessage());
@@ -44,6 +49,17 @@ public class MainMenuController {
         }
 
         return ValidationResult.VALID();
+    }
+
+    private boolean isUsernameAlreadyTaken(String username) {
+        if (username == null || username.isBlank()) {
+            return false;
+        }
+        String normalized = username.trim().toLowerCase();
+        return model.getPlayerNames().stream()
+            .filter(name -> name != null)
+            .map(name -> name.trim().toLowerCase())
+            .anyMatch(normalized::equals);
     }
 
     public void connectToServer() {
@@ -78,6 +94,10 @@ public class MainMenuController {
 
     public MainMenuModel getModel() {
         return model;
+    }
+
+    public ConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
     private void onConnectionResult(boolean success) {

@@ -1,8 +1,10 @@
 package com.werewolf.game;
 
 import com.werewolf.game.role.PlayerRole;
+import java.io.Serializable;
 
-public class Player {
+public class Player implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String id;
     private String username; 
     private PlayerRole role;

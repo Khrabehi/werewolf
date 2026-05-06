@@ -1,6 +1,6 @@
 package com.werewolf.event;
 
-import com.werewolf.game.GamePhase;
+import com.werewolf.game.GameState;
 import com.werewolf.game.Player;
 import com.werewolf.game.role.VillagerRole;
 import org.junit.jupiter.api.Test;
@@ -18,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GameStateUpdateTest {
     
     private GameStateUpdate update;
-    private GamePhase testPhase;
+    private GameState testPhase;
     private List<Player> testPlayers;
     private Map<String, Object> metadata;
     
     @BeforeEach
     public void setUp() {
-        testPhase = GamePhase.NIGHT;
+        testPhase = GameState.NIGHT;
         testPlayers = new ArrayList<>();
         Player p1 = new Player("p1", "Alice");
         p1.setRole(new VillagerRole());
@@ -108,19 +108,19 @@ public class GameStateUpdateTest {
     @Test
     @DisplayName("GameStateUpdate stores phase correctly")
     public void testGetNewPhase() {
-        update = new GameStateUpdate("Phase changed", GamePhase.DAY_VOTING, testPlayers);
-        assertEquals(GamePhase.DAY_VOTING, update.getNewPhase());
+        update = new GameStateUpdate("Phase changed", GameState.DAY_VOTING, testPlayers);
+        assertEquals(GameState.DAY_VOTING, update.getNewPhase());
     }
     
     @Test
     @DisplayName("GameStateUpdate can have different phases")
     public void testDifferentPhases() {
-        GameStateUpdate nightUpdate = new GameStateUpdate("Night started", GamePhase.NIGHT, testPlayers);
-        GameStateUpdate dayUpdate = new GameStateUpdate("Day started", GamePhase.DAY_DISCUSSION, testPlayers);
+        GameStateUpdate nightUpdate = new GameStateUpdate("Night started", GameState.NIGHT, testPlayers);
+        GameStateUpdate dayUpdate = new GameStateUpdate("Day started", GameState.DAY_DISCUSSION, testPlayers);
         
         assertNotEquals(nightUpdate.getNewPhase(), dayUpdate.getNewPhase());
-        assertEquals(GamePhase.NIGHT, nightUpdate.getNewPhase());
-        assertEquals(GamePhase.DAY_DISCUSSION, dayUpdate.getNewPhase());
+        assertEquals(GameState.NIGHT, nightUpdate.getNewPhase());
+        assertEquals(GameState.DAY_DISCUSSION, dayUpdate.getNewPhase());
     }
     
     @Test
@@ -145,7 +145,7 @@ public class GameStateUpdateTest {
     @DisplayName("GameStateUpdate with empty players list")
     public void testEmptyPlayersList() {
         List<Player> emptyList = new ArrayList<>();
-        update = new GameStateUpdate("Game over", GamePhase.GAME_OVER, emptyList);
+        update = new GameStateUpdate("Game over", GameState.GAME_OVER, emptyList);
         
         assertTrue(update.getAlivePlayers().isEmpty());
     }
@@ -230,7 +230,7 @@ public class GameStateUpdateTest {
         
         update = new GameStateUpdate(
             "Player p1 has been killed",
-            GamePhase.DAY_DISCUSSION,
+            GameState.DAY_DISCUSSION,
             alivePlayers
         );
         update.addMetadata("killed_player", "p1");
@@ -243,9 +243,9 @@ public class GameStateUpdateTest {
     @Test
     @DisplayName("Phase transition update")
     public void testPhaseTransitionUpdate() {
-        update = new GameStateUpdate("Transitioning to day voting", GamePhase.DAY_VOTING, testPlayers);
+        update = new GameStateUpdate("Transitioning to day voting", GameState.DAY_VOTING, testPlayers);
         
-        assertEquals(GamePhase.DAY_VOTING, update.getNewPhase());
+        assertEquals(GameState.DAY_VOTING, update.getNewPhase());
         assertEquals(2, update.getAlivePlayers().size());
     }
     
@@ -254,7 +254,7 @@ public class GameStateUpdateTest {
     public void testProtectionUpdate() {
         update = new GameStateUpdate(
             "Player p2 is protected",
-            GamePhase.NIGHT,
+            GameState.NIGHT,
             testPlayers
         );
         update.addMetadata("protected_player", "p2");
@@ -268,8 +268,8 @@ public class GameStateUpdateTest {
     @Test
     @DisplayName("Multiple GameStateUpdates are independent")
     public void testMultipleUpdatesIndependent() {
-        GameStateUpdate update1 = new GameStateUpdate("Update 1", GamePhase.NIGHT, testPlayers);
-        GameStateUpdate update2 = new GameStateUpdate("Update 2", GamePhase.DAY_VOTING, testPlayers);
+        GameStateUpdate update1 = new GameStateUpdate("Update 1", GameState.NIGHT, testPlayers);
+        GameStateUpdate update2 = new GameStateUpdate("Update 2", GameState.DAY_VOTING, testPlayers);
         
         assertNotEquals(update1.getMessage(), update2.getMessage());
         assertNotEquals(update1.getNewPhase(), update2.getNewPhase());

@@ -53,7 +53,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Werewolf can kill at night")
     public void testWerewolfCanKillAtNight() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("w1", killCmd);
@@ -65,7 +65,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Villager cannot kill")
     public void testVillagerCannotKill() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "w1");
         CommandExecutionResult result = orchestrator.executeCommand("v1", killCmd);
@@ -77,7 +77,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Medic cannot kill")
     public void testMedicCannotKill() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("m1", killCmd);
@@ -89,7 +89,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Kill only allowed at night")
     public void testKillOnlyAtNight() {
-        session.updatePhase(GamePhase.DAY_VOTING);
+        session.updatePhase(GameState.DAY_VOTING);
         
         GameCommand killCmd = new GameCommand("KILL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("w1", killCmd);
@@ -101,7 +101,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Cannot target yourself")
     public void testCannotTargetYourself() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "w1");
         CommandExecutionResult result = orchestrator.executeCommand("w1", killCmd);
@@ -114,7 +114,7 @@ public class CommandOrchestratorTest {
     @DisplayName("Cannot kill dead player")
     public void testCannotKillDeadPlayer() {
         villager.setAlive(false);
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("w1", killCmd);
@@ -127,7 +127,7 @@ public class CommandOrchestratorTest {
     @DisplayName("Dead player cannot act")
     public void testDeadPlayerCannotAct() {
         werewolf.setAlive(false);
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("w1", killCmd);
@@ -141,7 +141,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Villager can vote during day voting")
     public void testVillagerCanVote() {
-        session.updatePhase(GamePhase.DAY_VOTING);
+        session.updatePhase(GameState.DAY_VOTING);
         
         GameCommand voteCmd = new GameCommand("VOTE", "w1");
         CommandExecutionResult result = orchestrator.executeCommand("v1", voteCmd);
@@ -152,7 +152,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("All roles can vote during day voting")
     public void testAllRolesCanVote() {
-        session.updatePhase(GamePhase.DAY_VOTING);
+        session.updatePhase(GameState.DAY_VOTING);
         
         // Test each role can vote (each player votes for a different target)
         String[] voters = {"w1", "v1", "m1", "s1"};
@@ -168,7 +168,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Vote only allowed during day voting phase")
     public void testVoteOnlyDuringDayVoting() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand voteCmd = new GameCommand("VOTE", "w1");
         CommandExecutionResult result = orchestrator.executeCommand("v1", voteCmd);
@@ -182,7 +182,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Medic can protect at night")
     public void testMedicCanProtect() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand protectCmd = new GameCommand("HEAL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("m1", protectCmd);
@@ -194,7 +194,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Villager cannot protect")
     public void testVillagerCannotProtect() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand protectCmd = new GameCommand("HEAL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("v1", protectCmd);
@@ -208,7 +208,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Seer can investigate at night")
     public void testSeerCanInvestigate() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand investigateCmd = new GameCommand("PEEK", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("s1", investigateCmd);
@@ -219,7 +219,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Villager cannot investigate")
     public void testVillagerCannotInvestigate() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand investigateCmd = new GameCommand("PEEK", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("v1", investigateCmd);
@@ -233,7 +233,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Protected player survives kill")
     public void testProtectionMechanic() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         // Step 1: Medic protects the villager
         GameCommand protectCmd = new GameCommand("HEAL", "v1");
@@ -253,7 +253,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Unprotected player dies from kill")
     public void testUnprotectedPlayerDies() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         assertFalse(villager.isProtected(), "Villager should not be protected initially");
         
         GameCommand killCmd = new GameCommand("KILL", "v1");
@@ -268,7 +268,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Invalid player ID returns error")
     public void testInvalidPlayerId() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "invalid_id");
         CommandExecutionResult result = orchestrator.executeCommand("w1", killCmd);
@@ -279,7 +279,7 @@ public class CommandOrchestratorTest {
     @Test
     @DisplayName("Non-existent player cannot perform action")
     public void testNonExistentPlayerCannotAct() {
-        session.updatePhase(GamePhase.NIGHT);
+        session.updatePhase(GameState.NIGHT);
         
         GameCommand killCmd = new GameCommand("KILL", "v1");
         CommandExecutionResult result = orchestrator.executeCommand("non_existent", killCmd);

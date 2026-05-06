@@ -8,6 +8,7 @@ import javax.net.ssl.SSLSocket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.werewolf.game.GameManager;
 import com.werewolf.game.GameSession;
 import com.werewolf.security.CertificateManager;
 import com.werewolf.security.SSLContextFactory;
@@ -53,6 +54,7 @@ public class GameServer {
                 System.out.println("Waiting for secure players (Max " + MAX_PLAYERS + ")...");
 
                 final GameSession gameSession = new GameSession("main-session");
+                final GameManager gameManager = new GameManager(gameSession);
                 while (true) {
                     SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
                     clientSocket.startHandshake();
@@ -66,7 +68,7 @@ public class GameServer {
 
                     String tempPlayerId = "Player-" + clientSocket.getPort();
 
-                    ClientHandler handler = new ClientHandler(clientSocket, tempPlayerId, gameSession);
+                    ClientHandler handler = new ClientHandler(clientSocket, tempPlayerId, gameSession, gameManager);
 
                     threadPool.execute(handler);
                 }

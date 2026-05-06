@@ -1,17 +1,28 @@
 module com.werewolf {
     requires javafx.controls;
+    requires transitive javafx.graphics;
     requires javafx.fxml;
     requires java.desktop;
 
     opens com.werewolf to javafx.fxml;
-    opens com.werewolf.network.shared to java.base;
-    opens com.werewolf.validation to java.base;
-    opens com.werewolf.game to java.base;
-    opens com.werewolf.game.action to java.base;
+    opens com.werewolf.network.shared;
+    opens com.werewolf.validation;
+    opens com.werewolf.game;
+    opens com.werewolf.game.action;
+    opens com.werewolf.client.view to javafx.fxml;
+    opens com.werewolf.client.controller to javafx.fxml;
     exports com.werewolf;
+    exports com.werewolf.event;
+    exports com.werewolf.game;
+    exports com.werewolf.game.action;
+    exports com.werewolf.game.role;
+    exports com.werewolf.validation;
     exports com.werewolf.network.shared;
     exports com.werewolf.network.server;
     exports com.werewolf.network.client;
     exports com.werewolf.security;
     exports com.werewolf.client.view to javafx.graphics;
+    exports com.werewolf.client.model;
+    exports com.werewolf.client.controller;
+    exports com.werewolf.client.network;
 }

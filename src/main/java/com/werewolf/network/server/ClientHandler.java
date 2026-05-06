@@ -2,6 +2,7 @@ package com.werewolf.network.server;
 
 import com.werewolf.event.GameStateObserver;
 import com.werewolf.event.GameStateUpdate;
+import com.werewolf.game.GameManager;
 import com.werewolf.game.GameSession;
 import com.werewolf.game.Player;
 import com.werewolf.network.shared.GameCommand;
@@ -10,7 +11,6 @@ import com.werewolf.network.shared.Message;
 import com.werewolf.network.shared.MessageType;
 import com.werewolf.network.shared.PlayerListUpdate;
 import com.werewolf.validation.CommandExecutionResult;
-import com.werewolf.validation.CommandOrchestrator;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -26,14 +26,15 @@ public class ClientHandler implements Runnable, GameStateObserver {
     private final Object outLock = new Object();
 
     private GameSession gameSession;
-    private CommandOrchestrator orchestrator;
     private String playerId;
+    private final GameManager gameManager;
+    private volatile boolean joinedGame = false;
 
-    public ClientHandler(Socket socket, String playerId, GameSession session) {
+    public ClientHandler(Socket socket, String playerId, GameSession session, GameManager gameManager) {
         this.socket = socket;
         this.playerId = playerId;
         this.gameSession = session;
-        this.orchestrator = new CommandOrchestrator(session);
+        this.gameManager = gameManager;
 
         session.subscribe(this);
     }
@@ -42,6 +43,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
     public void run() {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
+            out.flush();
             in = new ObjectInputStream(socket.getInputStream());
 
             System.out.println("Nouveau client authentifié : " + playerId);
@@ -59,7 +61,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
             // Notifie qu'une connexion a été perdu 
             PlayerConnectionManager.unregisterConnection(playerId);
 
-            if (gameSession != null && playerId != null) {
+            if (joinedGame && gameSession != null && playerId != null) {
                 gameSession.removePlayer(playerId);
 
                 // Diffuse la liste de joueurs mise à jour
@@ -91,11 +93,17 @@ public class ClientHandler implements Runnable, GameStateObserver {
             case JOIN_GAME:
                 handleJoinGame(message);
                 break;
+            case START_GAME:
+                handleStartGame();
+                break;
             case KILL:
             case VOTE:
             case HEAL:
             case PEEK:
                 handleGameCommand(message);
+                break;
+            case CHAT:
+                handleChat(message);
                 break;
             default:
                 System.out.println("Type de message non géré : " + message.getType());
@@ -115,10 +123,23 @@ public class ClientHandler implements Runnable, GameStateObserver {
         Object content = message.getContent();
         String username = extractUsername(content);
 
+        if (gameSession.isUsernameTaken(username, playerId)) {
+            Message errorResponse = new Message(
+                    MessageType.ERROR,
+                    "Server",
+                    "Username already taken");
+            synchronized (outLock) {
+                out.writeObject(errorResponse);
+                out.flush();
+            }
+            return;
+        }
+
         System.out.println("Player " + playerId + " joining with username: " + username);
 
         Player newPlayer = new Player(playerId, username);
         gameSession.addPlayer(newPlayer);
+        joinedGame = true;
 
         // Assigne le role d'admin au premier joueur
         gameSession.assignAdminIfNeeded();
@@ -156,7 +177,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
             Message errorResponse = new Message(
                     MessageType.ERROR,
                     "Server",
-                    "Invalid command content.");
+                    "Contenu de commande invalide.");
             synchronized (outLock) {
                 out.writeObject(errorResponse);
                 out.flush();
@@ -166,8 +187,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
 
         GameCommand cmd = (GameCommand) content;
 
-        // Orchestrator gère validation + exécution
-        CommandExecutionResult result = orchestrator.executeCommand(playerId, cmd);
+        CommandExecutionResult result = gameManager.handleCommand(playerId, cmd);
 
         if (!result.isSuccess()) {
             Message errorResponse = new Message(
@@ -178,6 +198,54 @@ public class ClientHandler implements Runnable, GameStateObserver {
                 out.writeObject(errorResponse);
                 out.flush();
             }
+            return;
+        }
+
+        Message ack = new Message(MessageType.GAME_COMMAND_RESPONSE, "Server", "Commande acceptée");
+        synchronized (outLock) {
+            out.writeObject(ack);
+            out.flush();
+        }
+    }
+
+    private void handleChat(Message message) throws IOException {
+        if (gameSession == null) return;
+
+        Object content = message.getContent();
+        if (!(content instanceof GameCommand)) return;
+
+        GameCommand cmd = (GameCommand) content;
+        // Le texte du message est stocké dans le champ targetPlayerId par le client
+        String chatText = cmd.getTargetPlayerId();
+
+        Player sender = gameSession.getPlayer(playerId);
+        if (sender == null || !sender.isAlive()) return;
+
+        if (gameSession.getCurrentPhase() == com.werewolf.game.GameState.NIGHT) {
+            return; // Pas de discussion la nuit pour les joueurs normaux
+        }
+
+        gameSession.notifySessionUpdate("[" + sender.getUsername() + "] : " + chatText);
+    }
+
+    private void handleStartGame() throws IOException {
+        CommandExecutionResult result = gameManager.startGame(playerId);
+        if (!result.isSuccess()) {
+            Message errorResponse = new Message(
+                    MessageType.ERROR,
+                    "Server",
+                    result.getErrorMessage());
+            synchronized (outLock) {
+                out.writeObject(errorResponse);
+                out.flush();
+            }
+            return;
+        }
+
+        Message ack = new Message(MessageType.GAME_STARTED, "Server", "La partie a commencé");
+        synchronized (outLock) {
+            out.writeObject(ack);
+            out.flush();
         }
     }
 

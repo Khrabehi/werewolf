@@ -3,6 +3,7 @@ package com.werewolf.game.role;
 import java.util.List;
 
 public class MedicRole implements PlayerRole {
+    private static final long serialVersionUID = 1L;
     private static final List<String> ALLOWED_ACTIONS = List.of("HEAL", "VOTE");
 
     @Override
