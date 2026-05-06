@@ -4,7 +4,6 @@ import com.werewolf.client.controller.GameViewController;
 import com.werewolf.client.controller.MainMenuController;
 import com.werewolf.client.model.GameModel;
 import com.werewolf.client.model.MainMenuModel;
-import com.werewolf.client.view.GameView;
 
 import java.beans.PropertyChangeEvent;
 
@@ -37,6 +36,7 @@ public class MainMenuView extends Application {
     private Label statusLabel;
     private Label adminLabel;
     private ListView<String> playerListView;
+    private GameView activeGameView;
 
     @Override
     public void start(Stage primaryStage) {
@@ -55,6 +55,13 @@ public class MainMenuView extends Application {
         model.addPropertyChangeListener(this::onModelPropertyChange);
 
         primaryStage.show();
+    }
+
+    private static void configureGraphicsFallback() {
+        String osName = System.getProperty("os.name", "").toLowerCase();
+        if (osName.contains("linux") && System.getProperty("prism.order") == null) {
+            System.setProperty("prism.order", "sw");
+        }
     }
 
     private Scene createMainMenuScene() {
@@ -217,18 +224,26 @@ public class MainMenuView extends Application {
         // Enregistrer le gestionnaire d'abord — cela rejoue également toutes les mises à jour mises en mémoire tampon (ex: assignation de rôle)
         controller.getConnectionManager().setGameStateUpdateHandler(gameViewController::processGameStateUpdate);
 
-        GameView gameView = new GameView(primaryStage, gameModel, gameViewController, this::returnToLobby);
-        gameView.show();
+        activeGameView = new GameView(primaryStage, gameModel, gameViewController, this::closeAfterGameOver);
+        activeGameView.show();
     }
 
-    private void returnToLobby() {
-        controller.getConnectionManager().clearGameStateUpdateHandler();
-        model.setGameStarted(false);
-        model.setStatusMessage("Partie terminee. En attente du prochain lancement...");
-        primaryStage.setScene(mainMenuScene);
+    private void closeAfterGameOver() {
+        if (activeGameView != null) {
+            activeGameView.dispose();
+            activeGameView = null;
+        }
+        controller.getConnectionManager().disconnect();
+        Platform.runLater(() -> {
+            if (primaryStage != null) {
+                primaryStage.close();
+            }
+            Platform.exit();
+        });
     }
 
     public static void main(String[] args) {
+        configureGraphicsFallback();
         launch(args);
     }
 }

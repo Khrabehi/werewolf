@@ -31,6 +31,7 @@ public class ConnectionManager {
     private SSLSocket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+    private volatile boolean disconnectRequested;
 
     /**
      * Routes GAME_STATE_UPDATE messages to the game view once the game starts.
@@ -124,6 +125,9 @@ public class ConnectionManager {
     }
 
     private void handleConnectionError(Exception e) {
+        if (disconnectRequested) {
+            return;
+        }
         model.setIsConnecting(false);
         String errorMessage = "Connection failed: " + e.getMessage();
         model.setStatusMessage(errorMessage);
@@ -135,6 +139,7 @@ public class ConnectionManager {
 
     public void disconnect() {
         try {
+            disconnectRequested = true;
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
@@ -204,7 +209,9 @@ public class ConnectionManager {
                     }
                 }
             } catch (IOException | ClassNotFoundException e) {
-                handleConnectionError(e);
+                if (!disconnectRequested) {
+                    handleConnectionError(e);
+                }
             }
         });
         listenerThread.setDaemon(true);

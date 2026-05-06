@@ -15,7 +15,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -29,6 +28,7 @@ import javafx.stage.Stage;
 
 import java.util.List;
 import java.util.Map;
+import java.beans.PropertyChangeListener;
 
 public class GameView {
 
@@ -43,7 +43,7 @@ public class GameView {
     private final Stage stage;
     private final GameModel model;
     private final GameViewController controller;
-    private final Runnable onReturnToLobby;
+    private final Runnable onGameOverClose;
 
     private boolean gameOverHandled;
 
@@ -63,8 +63,10 @@ public class GameView {
 
     // État du chronomètre
     private Timeline phaseTimer;
+    private Timeline returnToLobbyTimer;
     private int timeRemaining;
     private GameState currentPhase;
+    private final PropertyChangeListener modelListener = evt -> Platform.runLater(this::refreshUI);
 
     // Barre latérale des joueurs
     private ListView<String> playerListView;
@@ -79,11 +81,11 @@ public class GameView {
     private ListView<String> targetListView;
     private Button actionButton;
 
-    public GameView(Stage stage, GameModel model, GameViewController controller, Runnable onReturnToLobby) {
+    public GameView(Stage stage, GameModel model, GameViewController controller, Runnable onGameOverClose) {
         this.stage = stage;
         this.model = model;
         this.controller = controller;
-        this.onReturnToLobby = onReturnToLobby;
+        this.onGameOverClose = onGameOverClose;
         this.gameOverHandled = false;
     }
 
@@ -95,8 +97,20 @@ public class GameView {
         stage.setResizable(true);
         stage.setTitle("Loup-Garou – En jeu");
 
-        model.addPropertyChangeListener(evt -> Platform.runLater(this::refreshUI));
+        model.addPropertyChangeListener(modelListener);
         refreshUI();
+    }
+
+    public void dispose() {
+        if (phaseTimer != null) {
+            phaseTimer.stop();
+            phaseTimer = null;
+        }
+        if (returnToLobbyTimer != null) {
+            returnToLobbyTimer.stop();
+            returnToLobbyTimer = null;
+        }
+        model.removePropertyChangeListener(modelListener);
     }
 
     // ─────────────────────────── Construction de la scène ───────────────────────────
@@ -524,13 +538,14 @@ public class GameView {
         if (gameOverHandled) return;
         gameOverHandled = true;
 
-        Timeline delay = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
-            if (onReturnToLobby != null) {
-                onReturnToLobby.run();
+        returnToLobbyTimer = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+            dispose();
+            if (onGameOverClose != null) {
+                onGameOverClose.run();
             }
         }));
-        delay.setCycleCount(1);
-        delay.play();
+        returnToLobbyTimer.setCycleCount(1);
+        returnToLobbyTimer.play();
     }
 
     // ─────────────────────────── Gestionnaire d'actions ───────────────────────────────
