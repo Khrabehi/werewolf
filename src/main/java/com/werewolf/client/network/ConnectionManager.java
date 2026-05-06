@@ -239,6 +239,13 @@ public class ConnectionManager {
         }
     }
 
+    public void clearGameStateUpdateHandler() {
+        this.gameStateUpdateHandler = null;
+        synchronized (pendingGameUpdates) {
+            pendingGameUpdates.clear();
+        }
+    }
+
     /**
      * Sends a game action command (KILL / VOTE / HEAL / PEEK) to the server.
      *

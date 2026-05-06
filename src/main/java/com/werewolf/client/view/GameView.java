@@ -43,6 +43,9 @@ public class GameView {
     private final Stage stage;
     private final GameModel model;
     private final GameViewController controller;
+    private final Runnable onReturnToLobby;
+
+    private boolean gameOverHandled;
 
     // Scène principale
     private BorderPane root;
@@ -76,10 +79,12 @@ public class GameView {
     private ListView<String> targetListView;
     private Button actionButton;
 
-    public GameView(Stage stage, GameModel model, GameViewController controller) {
+    public GameView(Stage stage, GameModel model, GameViewController controller, Runnable onReturnToLobby) {
         this.stage = stage;
         this.model = model;
         this.controller = controller;
+        this.onReturnToLobby = onReturnToLobby;
+        this.gameOverHandled = false;
     }
 
     public void show() {
@@ -260,7 +265,10 @@ public class GameView {
         updateEventLog();
         updateActionPanel(phase, myRole);
         updateChatPanel(phase);
-        if (phase == GameState.GAME_OVER) appendGameOverToLog();
+        if (phase == GameState.GAME_OVER) {
+            appendGameOverToLog();
+            scheduleReturnToLobby();
+        }
 
         if (phase != currentPhase) {
             currentPhase = phase;
@@ -510,6 +518,19 @@ public class GameView {
             eventLogView.getItems().add("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             eventLogView.scrollTo(eventLogView.getItems().size() - 1);
         }
+    }
+
+    private void scheduleReturnToLobby() {
+        if (gameOverHandled) return;
+        gameOverHandled = true;
+
+        Timeline delay = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+            if (onReturnToLobby != null) {
+                onReturnToLobby.run();
+            }
+        }));
+        delay.setCycleCount(1);
+        delay.play();
     }
 
     // ─────────────────────────── Gestionnaire d'actions ───────────────────────────────

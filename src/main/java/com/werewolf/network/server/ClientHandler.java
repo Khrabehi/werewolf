@@ -121,6 +121,18 @@ public class ClientHandler implements Runnable, GameStateObserver {
         Object content = message.getContent();
         String username = extractUsername(content);
 
+        if (gameSession.isUsernameTaken(username, playerId)) {
+            Message errorResponse = new Message(
+                    MessageType.ERROR,
+                    "Server",
+                    "Username already taken");
+            synchronized (outLock) {
+                out.writeObject(errorResponse);
+                out.flush();
+            }
+            return;
+        }
+
         System.out.println("Player " + playerId + " joining with username: " + username);
 
         Player newPlayer = new Player(playerId, username);

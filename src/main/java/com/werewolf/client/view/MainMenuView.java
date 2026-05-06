@@ -27,6 +27,7 @@ public class MainMenuView extends Application {
     private MainMenuModel model;
     private MainMenuController controller;
     private Stage primaryStage;
+    private Scene mainMenuScene;
 
     private TextField usernameField;
     private TextField ipField;
@@ -43,10 +44,10 @@ public class MainMenuView extends Application {
         model = new MainMenuModel();
         controller = new MainMenuController(model);
 
-        Scene scene = createMainMenuScene();
+        mainMenuScene = createMainMenuScene();
 
         primaryStage.setTitle("Loup-Garou - Le Village");
-        primaryStage.setScene(scene);
+        primaryStage.setScene(mainMenuScene);
         primaryStage.setWidth(640);
         primaryStage.setHeight(600);
         primaryStage.setResizable(false);
@@ -216,8 +217,15 @@ public class MainMenuView extends Application {
         // Enregistrer le gestionnaire d'abord — cela rejoue également toutes les mises à jour mises en mémoire tampon (ex: assignation de rôle)
         controller.getConnectionManager().setGameStateUpdateHandler(gameViewController::processGameStateUpdate);
 
-        GameView gameView = new GameView(primaryStage, gameModel, gameViewController);
+        GameView gameView = new GameView(primaryStage, gameModel, gameViewController, this::returnToLobby);
         gameView.show();
+    }
+
+    private void returnToLobby() {
+        controller.getConnectionManager().clearGameStateUpdateHandler();
+        model.setGameStarted(false);
+        model.setStatusMessage("Partie terminee. En attente du prochain lancement...");
+        primaryStage.setScene(mainMenuScene);
     }
 
     public static void main(String[] args) {

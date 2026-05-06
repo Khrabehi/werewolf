@@ -79,6 +79,19 @@ public class GameSession {
             .collect(Collectors.toList());
     }
 
+    public boolean isUsernameTaken(String username, String excludePlayerId) {
+        if (username == null || username.isBlank()) {
+            return false;
+        }
+        String normalized = username.trim().toLowerCase();
+        return players.values().stream()
+            .filter(p -> excludePlayerId == null || !excludePlayerId.equals(p.getId()))
+            .map(Player::getUsername)
+            .filter(name -> name != null)
+            .map(name -> name.trim().toLowerCase())
+            .anyMatch(normalized::equals);
+    }
+
     public void subscribe(GameStateObserver observer) {
         observers.add(observer);
     }
