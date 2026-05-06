@@ -3,9 +3,12 @@ package com.werewolf.network.server;
 import com.werewolf.event.GameStateObserver;
 import com.werewolf.event.GameStateUpdate;
 import com.werewolf.game.GameSession;
+import com.werewolf.game.Player;
 import com.werewolf.network.shared.GameCommand;
+import com.werewolf.network.shared.JoinGameRequest;
 import com.werewolf.network.shared.Message;
 import com.werewolf.network.shared.MessageType;
+import com.werewolf.network.shared.PlayerListUpdate;
 import com.werewolf.validation.CommandExecutionResult;
 import com.werewolf.validation.CommandOrchestrator;
 
@@ -43,6 +46,9 @@ public class ClientHandler implements Runnable, GameStateObserver {
 
             System.out.println("Nouveau client authentifié : " + playerId);
 
+            // enregistre la connexion à broadcast
+            PlayerConnectionManager.registerConnection(playerId, this);
+
             while (true) {
                 Message receivedMessage = (Message) in.readObject();
                 handleMessage(receivedMessage);
@@ -50,8 +56,25 @@ public class ClientHandler implements Runnable, GameStateObserver {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Déconnexion du client " + playerId);
         } finally {
+            // Notifie qu'une connexion a été perdu 
+            PlayerConnectionManager.unregisterConnection(playerId);
+
             if (gameSession != null && playerId != null) {
                 gameSession.removePlayer(playerId);
+
+                // Diffuse la liste de joueurs mise à jour
+                try {
+                    String adminName = getAdminName();
+                    java.util.List<String> playerNames = gameSession.getPlayerNames();
+                    PlayerListUpdate update = new PlayerListUpdate(playerNames, adminName);
+                    Message notification = new Message(
+                            MessageType.PLAYER_LIST_UPDATE,
+                            "Server",
+                            update);
+                    PlayerConnectionManager.broadcastToAll(notification);
+                } catch (Exception e) {
+                    System.err.println("Failed to broadcast disconnect update: " + e.getMessage());
+                }
             }
             if (gameSession != null) {
                 gameSession.unsubscribe(this);
@@ -64,6 +87,9 @@ public class ClientHandler implements Runnable, GameStateObserver {
         switch (message.getType()) {
             case PING:
                 handlePing();
+                break;
+            case JOIN_GAME:
+                handleJoinGame(message);
                 break;
             case KILL:
             case VOTE:
@@ -83,6 +109,45 @@ public class ClientHandler implements Runnable, GameStateObserver {
             out.writeObject(pongMessage);
             out.flush();
         }
+    }
+
+    private void handleJoinGame(Message message) throws IOException {
+        Object content = message.getContent();
+        String username = extractUsername(content);
+
+        System.out.println("Player " + playerId + " joining with username: " + username);
+
+        Player newPlayer = new Player(playerId, username);
+        gameSession.addPlayer(newPlayer);
+
+        // Assigne le role d'admin au premier joueur
+        gameSession.assignAdminIfNeeded();
+
+        java.util.List<String> playerNames = gameSession.getPlayerNames();
+        String adminName = getAdminName();
+
+        PlayerListUpdate update = new PlayerListUpdate(playerNames, adminName);
+        Message notification = new Message(
+                MessageType.PLAYER_LIST_UPDATE,
+                "Server",
+                update);
+        PlayerConnectionManager.broadcastToAll(notification);
+    }
+
+    private String extractUsername(Object content) {
+        if (content instanceof JoinGameRequest) {
+            return ((JoinGameRequest) content).getUsername();
+        }
+        return (content != null) ? content.toString() : playerId;
+    }
+
+    private String getAdminName() {
+        String adminId = gameSession.getAdminId();
+        if (adminId == null) {
+            return null;
+        }
+        Player admin = gameSession.getPlayer(adminId);
+        return admin != null ? admin.getUsername() : null;
     }
 
     private void handleGameCommand(Message message) throws IOException {
@@ -132,6 +197,18 @@ public class ClientHandler implements Runnable, GameStateObserver {
             }
         } catch (IOException e) {
             System.err.println("Échec de l'envoi de la mise à jour au client : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Methode pour broadcast un message
+     */
+    public void sendMessage(Message message) throws IOException {
+        synchronized (outLock) {
+            if (out != null) {
+                out.writeObject(message);
+                out.flush();
+            }
         }
     }
 

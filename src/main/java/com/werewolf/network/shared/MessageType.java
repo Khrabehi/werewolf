@@ -17,5 +17,13 @@ public enum MessageType {
     // Responses and server state management
     ERROR,                 // Rejection of a command (e.g., cheating, out of turn)
     GAME_STATE_UPDATE,     // Server announces a change (day/night, deaths, etc.)
-    GAME_COMMAND_RESPONSE  // Confirmation that an action has been taken into account
+    GAME_COMMAND_RESPONSE, // Confirmation that an action has been taken into account
+
+    // Menu and session lifecycle
+    JOIN_GAME,
+    PLAYER_LIST_UPDATE,
+    ADMIN_ASSIGNED,
+    ADMIN_REVOKED,
+    START_GAME,
+    GAME_STARTED
 }
