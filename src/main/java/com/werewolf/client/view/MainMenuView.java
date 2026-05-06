@@ -1,7 +1,10 @@
 package com.werewolf.client.view;
 
+import com.werewolf.client.controller.GameViewController;
 import com.werewolf.client.controller.MainMenuController;
+import com.werewolf.client.model.GameModel;
 import com.werewolf.client.model.MainMenuModel;
+import com.werewolf.client.view.GameView;
 
 import java.beans.PropertyChangeEvent;
 
@@ -23,6 +26,7 @@ import javafx.stage.Stage;
 public class MainMenuView extends Application {
     private MainMenuModel model;
     private MainMenuController controller;
+    private Stage primaryStage;
 
     private TextField usernameField;
     private TextField ipField;
@@ -35,6 +39,7 @@ public class MainMenuView extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
         model = new MainMenuModel();
         controller = new MainMenuController(model);
 
@@ -194,8 +199,25 @@ public class MainMenuView extends Application {
             if ("isAdmin".equals(event.getPropertyName())) {
                 boolean isAdmin = (boolean) event.getNewValue();
                 startGameButton.setDisable(!isAdmin);
+                return;
+            }
+
+            if ("gameStarted".equals(event.getPropertyName()) && Boolean.TRUE.equals(event.getNewValue())) {
+                switchToGameView();
             }
         });
+    }
+
+    private void switchToGameView() {
+        GameModel gameModel = new GameModel(model.getUsername());
+        GameViewController gameViewController = new GameViewController(
+            gameModel, controller.getConnectionManager()
+        );
+        // Register handler first — this also replays any buffered updates (e.g. role assignment)
+        controller.getConnectionManager().setGameStateUpdateHandler(gameViewController::processGameStateUpdate);
+
+        GameView gameView = new GameView(primaryStage, gameModel, gameViewController);
+        gameView.show();
     }
 
     public static void main(String[] args) {

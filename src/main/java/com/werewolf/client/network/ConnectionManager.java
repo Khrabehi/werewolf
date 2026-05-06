@@ -10,9 +10,13 @@ import com.werewolf.network.shared.PlayerListUpdate;
 import com.werewolf.security.CertificateManager;
 import com.werewolf.security.SSLContextFactory;
 
+import com.werewolf.network.shared.GameCommand;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import javax.net.ssl.SSLContext;
@@ -26,6 +30,13 @@ public class ConnectionManager {
     private SSLSocket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+
+    /**
+     * Routes GAME_STATE_UPDATE messages to the game view once the game starts.
+     * Updates received before this handler is set are buffered and replayed on registration.
+     */
+    private volatile Consumer<GameStateUpdate> gameStateUpdateHandler = null;
+    private final List<GameStateUpdate> pendingGameUpdates = new ArrayList<>();
 
     public ConnectionManager(MainMenuModel model, Consumer<Boolean> onConnectionResult) {
         this.model = model;
@@ -176,8 +187,8 @@ public class ConnectionManager {
                 break;
             case GAME_STATE_UPDATE:
                 Object updateContent = message.getContent();
-                if (updateContent instanceof GameStateUpdate) {
-                    model.setStatusMessage(((GameStateUpdate) updateContent).getMessage());
+                if (updateContent instanceof GameStateUpdate gameUpdate) {
+                    routeGameStateUpdate(gameUpdate);
                 } else if (updateContent != null) {
                     model.setStatusMessage(updateContent.toString());
                 }
@@ -191,6 +202,57 @@ public class ConnectionManager {
                 break;
             default:
                 break;
+        }
+    }
+
+    private void routeGameStateUpdate(GameStateUpdate update) {
+        Consumer<GameStateUpdate> handler = gameStateUpdateHandler;
+        if (handler != null) {
+            handler.accept(update);
+        } else {
+            // Buffer updates that arrive before the game view is ready (e.g. role assignment)
+            synchronized (pendingGameUpdates) {
+                pendingGameUpdates.add(update);
+            }
+            // Also show the message in the lobby status bar
+            if (update.getMessage() != null) {
+                model.setStatusMessage(update.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Registers the game-phase message handler. Immediately replays any updates that
+     * arrived before the game view was initialised (e.g. private role assignment).
+     */
+    public void setGameStateUpdateHandler(Consumer<GameStateUpdate> handler) {
+        this.gameStateUpdateHandler = handler;
+        List<GameStateUpdate> buffered;
+        synchronized (pendingGameUpdates) {
+            buffered = new ArrayList<>(pendingGameUpdates);
+            pendingGameUpdates.clear();
+        }
+        for (GameStateUpdate update : buffered) {
+            handler.accept(update);
+        }
+    }
+
+    /**
+     * Sends a game action command (KILL / VOTE / HEAL / PEEK) to the server.
+     *
+     * @param type           the message type that identifies the action
+     * @param targetId       the server-assigned player ID of the target
+     * @param senderUsername this client's display name (used as message sender)
+     */
+    public void sendGameCommand(MessageType type, String targetId, String senderUsername) {
+        if (!isConnected() || out == null) return;
+        try {
+            GameCommand cmd = new GameCommand(type.name(), targetId);
+            Message message = new Message(type, senderUsername, cmd);
+            out.writeObject(message);
+            out.flush();
+        } catch (IOException e) {
+            handleConnectionError(e);
         }
     }
 

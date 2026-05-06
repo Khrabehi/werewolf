@@ -8,6 +8,8 @@ module com.werewolf {
     opens com.werewolf.validation;
     opens com.werewolf.game;
     opens com.werewolf.game.action;
+    opens com.werewolf.client.view to javafx.fxml;
+    opens com.werewolf.client.controller to javafx.fxml;
     exports com.werewolf;
     exports com.werewolf.event;
     exports com.werewolf.game;
@@ -19,4 +21,7 @@ module com.werewolf {
     exports com.werewolf.network.client;
     exports com.werewolf.security;
     exports com.werewolf.client.view to javafx.graphics;
+    exports com.werewolf.client.model;
+    exports com.werewolf.client.controller;
+    exports com.werewolf.client.network;
 }

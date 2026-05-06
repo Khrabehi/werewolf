@@ -80,6 +80,10 @@ public class MainMenuController {
         return model;
     }
 
+    public ConnectionManager getConnectionManager() {
+        return connectionManager;
+    }
+
     private void onConnectionResult(boolean success) {
         if (success) {
             System.out.println("Successfully connected as: " + model.getUsername());
