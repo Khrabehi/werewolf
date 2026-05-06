@@ -1,6 +1,7 @@
 module com.werewolf {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.desktop;
 
     opens com.werewolf to javafx.fxml;
     opens com.werewolf.network.shared to java.base;
