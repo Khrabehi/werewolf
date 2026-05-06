@@ -43,7 +43,7 @@ public class CommandOrchestrator {
             return CommandExecutionResult.success();
         } catch (IllegalArgumentException e) {
             System.err.println("Command execution failed for player " + playerId + ": " + e.getMessage());
-            return CommandExecutionResult.failed("Invalid command.");
+            return CommandExecutionResult.failed("Invalid command parameters.");
         }
     }
 }

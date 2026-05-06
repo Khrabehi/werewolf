@@ -50,19 +50,13 @@ public class ClientHandler implements Runnable, GameStateObserver {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Déconnexion du client " + playerId);
         } finally {
-            try {
-                if (gameSession != null && playerId != null) {
-                    gameSession.removePlayer(playerId);
-                }
-            } finally {
-                try {
-                    if (gameSession != null) {
-                        gameSession.unsubscribe(this);
-                    }
-                } finally {
-                    closeConnections();
-                }
+            if (gameSession != null && playerId != null) {
+                gameSession.removePlayer(playerId);
             }
+            if (gameSession != null) {
+                gameSession.unsubscribe(this);
+            }
+            closeConnections();
         }
     }
 
@@ -97,7 +91,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
             Message errorResponse = new Message(
                     MessageType.ERROR,
                     "Server",
-                    "Contenu de commande invalide.");
+                    "Invalid command content.");
             synchronized (outLock) {
                 out.writeObject(errorResponse);
                 out.flush();
