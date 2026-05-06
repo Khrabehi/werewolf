@@ -41,8 +41,9 @@ public class CommandOrchestrator {
             action.execute(actor, target, gameSession);
             
             return CommandExecutionResult.success();
-        } catch (Exception e) {
-            return CommandExecutionResult.failed("Execution error: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.err.println("Command execution failed for player " + playerId + ": " + e.getMessage());
+            return CommandExecutionResult.failed("Invalid command.");
         }
     }
 }

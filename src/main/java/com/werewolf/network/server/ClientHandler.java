@@ -20,6 +20,8 @@ public class ClientHandler implements Runnable, GameStateObserver {
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
+    private final Object outLock = new Object();
+
     private GameSession gameSession;
     private CommandOrchestrator orchestrator;
     private String playerId;
@@ -48,8 +50,19 @@ public class ClientHandler implements Runnable, GameStateObserver {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Déconnexion du client " + playerId);
         } finally {
-            gameSession.unsubscribe(this);
-            closeConnections();
+            try {
+                if (gameSession != null && playerId != null) {
+                    gameSession.removePlayer(playerId);
+                }
+            } finally {
+                try {
+                    if (gameSession != null) {
+                        gameSession.unsubscribe(this);
+                    }
+                } finally {
+                    closeConnections();
+                }
+            }
         }
     }
 
@@ -72,12 +85,27 @@ public class ClientHandler implements Runnable, GameStateObserver {
 
     private void handlePing() throws IOException {
         Message pongMessage = new Message(MessageType.PONG, "Server", "Return pong");
-        out.writeObject(pongMessage);
-        out.flush();
+        synchronized (outLock) {
+            out.writeObject(pongMessage);
+            out.flush();
+        }
     }
 
     private void handleGameCommand(Message message) throws IOException {
-        GameCommand cmd = (GameCommand) message.getContent();
+        Object content = message.getContent();
+        if (!(content instanceof GameCommand)) {
+            Message errorResponse = new Message(
+                    MessageType.ERROR,
+                    "Server",
+                    "Contenu de commande invalide.");
+            synchronized (outLock) {
+                out.writeObject(errorResponse);
+                out.flush();
+            }
+            return;
+        }
+
+        GameCommand cmd = (GameCommand) content;
 
         // Orchestrator gère validation + exécution
         CommandExecutionResult result = orchestrator.executeCommand(playerId, cmd);
@@ -87,8 +115,10 @@ public class ClientHandler implements Runnable, GameStateObserver {
                     MessageType.ERROR,
                     "Server",
                     result.getErrorMessage());
-            out.writeObject(errorResponse);
-            out.flush();
+            synchronized (outLock) {
+                out.writeObject(errorResponse);
+                out.flush();
+            }
         }
     }
 
@@ -100,7 +130,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
                     "Server",
                     update);
 
-            synchronized (out) {
+            synchronized (outLock) {
                 if (out != null) {
                     out.writeObject(notification);
                     out.flush();

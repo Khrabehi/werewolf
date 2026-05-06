@@ -10,7 +10,7 @@ public class CommandExecutionResult {
     }
 
     public static CommandExecutionResult success() {
-        return new CommandExecutionResult(true, "Command executed successfully");
+        return new CommandExecutionResult(true, null);
     }
 
     public static CommandExecutionResult failed(String errorMessage) {

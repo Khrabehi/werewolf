@@ -19,9 +19,6 @@ public class GameStateValidator extends AbstractValidator {
         if (("HEAL".equals(actionType) || "PEEK".equals(actionType)) && session.getCurrentPhase() != GamePhase.NIGHT) {
             return ValidationResult.INVALID(actionType + " action only allowed at night");
         }
-        if ("PEEK".equals(actionType) && session.getCurrentPhase() != GamePhase.NIGHT) {
-            return ValidationResult.INVALID("Peek action only allowed at night");
-        }
 
         return callNext(cmd, actor, session);
     }

@@ -9,7 +9,7 @@ public class TargetValidationValidator extends AbstractValidator {
     public ValidationResult validate(GameCommand cmd, Player actor, GameSession session) {
         String targetId = cmd.getTargetPlayerId();
         
-        // Certaines commandes n'ont pas de cible (ex: passer son tour)
+        // Toutes les commandes supportées nécessitent une cible.
         if (targetId == null) {
             return ValidationResult.INVALID("No target specified");
         }

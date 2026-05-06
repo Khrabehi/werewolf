@@ -80,11 +80,11 @@ public class ValidationResultTest {
     }
     
     @Test
-    @DisplayName("CommandExecutionResult success has message")
+    @DisplayName("CommandExecutionResult success has null error message")
     public void testCommandExecutionResultSuccessMessage() {
         CommandExecutionResult result = CommandExecutionResult.success();
         assertTrue(result.isSuccess());
-        assertNotNull(result.getErrorMessage());
+        assertNull(result.getErrorMessage());
     }
     
     @Test

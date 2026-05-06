@@ -3,11 +3,8 @@ package com.werewolf.network.server;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 
-import java.net.Socket;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,9 +17,6 @@ public class GameServer {
     private static final int PORT = 8443; // Standard port for HTTPS
     private static final int MAX_PLAYERS = 10;
     private static final String STORE_PASSWORD = loadStorePassword();
-
-    private Map<String, GameSession> gameSessions = new ConcurrentHashMap<>();
-    private Map<String, ClientHandler> connectedClients = new ConcurrentHashMap<>();
 
     private static String loadStorePassword() {
         String password = System.getProperty("GAMESERVER_STORE_PASSWORD");
@@ -61,8 +55,15 @@ public class GameServer {
 
                 final GameSession gameSession = new GameSession("main-session");
                 while (true) {
-                    Socket clientSocket = serverSocket.accept();
+                    SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+                    clientSocket.startHandshake();
                     System.out.println("Connection from : " + clientSocket.getInetAddress());
+
+                    if (gameSession.getPlayers().size() >= MAX_PLAYERS) {
+                        System.out.println("Session full. Rejecting connection from: " + clientSocket.getInetAddress());
+                        clientSocket.close();
+                        continue;
+                    }
 
                     String tempPlayerId = "Player-" + clientSocket.getPort();
 
@@ -78,24 +79,6 @@ public class GameServer {
             System.err.println("Critical error when starting the secure server: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    private GameSession findOrCreateSession() {
-        for (GameSession session : gameSessions.values()) {
-            if (session.getPlayers().size() < MAX_PLAYERS) {
-                // Vous pourrez ajouter ici une vérification pour ne rejoindre que les parties
-                // en LOBBY
-                return session;
-            }
-        }
-
-        // Création d'une nouvelle session si toutes sont pleines
-        String newSessionId = "Session-" + UUID.randomUUID().toString().substring(0, 8);
-        GameSession newSession = new GameSession(newSessionId);
-        gameSessions.put(newSessionId, newSession);
-        System.out.println("--- Created new Game Session: " + newSessionId + " ---");
-
-        return newSession;
     }
 
     public static void main(String[] args) {
