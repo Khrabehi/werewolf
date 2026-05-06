@@ -12,6 +12,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -27,7 +28,10 @@ public class MainMenuView extends Application {
     private TextField ipField;
     private TextField portField;
     private Button joinButton;
+    private Button startGameButton;
     private Label statusLabel;
+    private Label adminLabel;
+    private ListView<String> playerListView;
 
     @Override
     public void start(Stage primaryStage) {
@@ -38,8 +42,8 @@ public class MainMenuView extends Application {
 
         primaryStage.setTitle("Werewolf - The Village");
         primaryStage.setScene(scene);
-        primaryStage.setWidth(500);
-        primaryStage.setHeight(500);
+        primaryStage.setWidth(640);
+        primaryStage.setHeight(600);
         primaryStage.setResizable(false);
 
         model.addPropertyChangeListener(this::onModelPropertyChange);
@@ -58,6 +62,8 @@ public class MainMenuView extends Application {
 
         root.getChildren().add(new Separator());
         root.getChildren().add(createInputForm());
+        root.getChildren().add(new Separator());
+        root.getChildren().add(createLobbyPanel());
         root.getChildren().add(new Separator());
         root.getChildren().add(createButtons());
 
@@ -110,6 +116,25 @@ public class MainMenuView extends Application {
         return formBox;
     }
 
+    private VBox createLobbyPanel() {
+        VBox lobbyBox = new VBox(10);
+        lobbyBox.setStyle("-fx-border-color: #ecf0f1; -fx-border-radius: 5; -fx-padding: 20;");
+
+        Label playersTitle = new Label("Players");
+        playersTitle.setStyle("-fx-font-weight: bold;");
+        lobbyBox.getChildren().add(playersTitle);
+
+        playerListView = new ListView<>();
+        playerListView.setPrefHeight(120);
+        lobbyBox.getChildren().add(playerListView);
+
+        adminLabel = new Label("Admin: -");
+        adminLabel.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 12;");
+        lobbyBox.getChildren().add(adminLabel);
+
+        return lobbyBox;
+    }
+
     private HBox createButtons() {
         HBox buttonBox = new HBox(10);
         buttonBox.setAlignment(Pos.CENTER);
@@ -126,7 +151,14 @@ public class MainMenuView extends Application {
         quitButton.setStyle("-fx-font-size: 14;");
         quitButton.setOnAction(e -> controller.quitApplication());
 
-        buttonBox.getChildren().addAll(joinButton, quitButton);
+        startGameButton = new Button("Start Game");
+        startGameButton.setPrefWidth(120);
+        startGameButton.setPrefHeight(40);
+        startGameButton.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
+        startGameButton.setDisable(true);
+        startGameButton.setOnAction(e -> controller.startGame());
+
+        buttonBox.getChildren().addAll(joinButton, startGameButton, quitButton);
         return buttonBox;
     }
 
@@ -145,6 +177,23 @@ public class MainMenuView extends Application {
                 } else {
                     statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 11; -fx-font-style: italic;");
                 }
+                return;
+            }
+
+            if ("playerNames".equals(event.getPropertyName())) {
+                playerListView.getItems().setAll(model.getPlayerNames());
+                return;
+            }
+
+            if ("adminName".equals(event.getPropertyName())) {
+                String adminName = model.getAdminName();
+                adminLabel.setText(adminName != null ? "Admin: " + adminName : "Admin: -");
+                return;
+            }
+
+            if ("isAdmin".equals(event.getPropertyName())) {
+                boolean isAdmin = (boolean) event.getNewValue();
+                startGameButton.setDisable(!isAdmin);
             }
         });
     }

@@ -2,6 +2,10 @@ package com.werewolf.client.network;
 
 import com.werewolf.client.model.ConnectionConfig;
 import com.werewolf.client.model.MainMenuModel;
+import com.werewolf.network.shared.JoinGameRequest;
+import com.werewolf.network.shared.Message;
+import com.werewolf.network.shared.MessageType;
+import com.werewolf.network.shared.PlayerListUpdate;
 import com.werewolf.security.CertificateManager;
 import com.werewolf.security.SSLContextFactory;
 
@@ -85,6 +89,9 @@ public class ConnectionManager {
         model.setStatusMessage("Successfully connected to server!");
         model.setIsConnecting(false);
 
+        startListener();
+        sendJoinGame(config.getUsername());
+
         onConnectionResult.accept(true);
     }
 
@@ -105,6 +112,61 @@ public class ConnectionManager {
             }
         } catch (IOException e) {
             System.err.println("Error closing socket: " + e.getMessage());
+        }
+    }
+
+    public void sendJoinGame(String username) {
+        if (!isConnected() || out == null) {
+            return;
+        }
+        try {
+            JoinGameRequest request = new JoinGameRequest(username);
+            Message message = new Message(MessageType.JOIN_GAME, username, request);
+            out.writeObject(message);
+            out.flush();
+        } catch (IOException e) {
+            handleConnectionError(e);
+        }
+    }
+
+    public void sendStartGame(String username) {
+        if (!isConnected() || out == null) {
+            return;
+        }
+        try {
+            Message message = new Message(MessageType.START_GAME, username, "start");
+            out.writeObject(message);
+            out.flush();
+        } catch (IOException e) {
+            handleConnectionError(e);
+        }
+    }
+
+    private void startListener() {
+        Thread listenerThread = new Thread(() -> {
+            try {
+                while (socket != null && socket.isConnected()) {
+                    Object incoming = in.readObject();
+                    if (incoming instanceof Message) {
+                        handleIncomingMessage((Message) incoming);
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                handleConnectionError(e);
+            }
+        });
+        listenerThread.setDaemon(true);
+        listenerThread.start();
+    }
+
+    private void handleIncomingMessage(Message message) {
+        if (message.getType() == MessageType.PLAYER_LIST_UPDATE) {
+            Object content = message.getContent();
+            if (content instanceof PlayerListUpdate) {
+                PlayerListUpdate update = (PlayerListUpdate) content;
+                model.setPlayerNames(update.getPlayerNames());
+                model.setAdminName(update.getAdminName());
+            }
         }
     }
 

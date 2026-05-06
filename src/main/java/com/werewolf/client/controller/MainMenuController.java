@@ -72,6 +72,10 @@ public class MainMenuController {
         System.exit(0);
     }
 
+    public void startGame() {
+        connectionManager.sendStartGame(model.getUsername());
+    }
+
     public MainMenuModel getModel() {
         return model;
     }

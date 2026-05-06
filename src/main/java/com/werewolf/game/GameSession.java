@@ -13,6 +13,8 @@ public class GameSession {
     private Map<String, Player> players;
     private GamePhase currentPhase;
     private Map<String, String> currentVotes = new ConcurrentHashMap<>();
+    private final List<String> joinOrder = new CopyOnWriteArrayList<>();
+    private String adminId;
     
     private final List<GameStateObserver> observers = new CopyOnWriteArrayList<>();
 
@@ -24,6 +26,10 @@ public class GameSession {
 
     public void addPlayer(Player player) {
         players.put(player.getId(), player);
+        if (!joinOrder.contains(player.getId())) {
+            joinOrder.add(player.getId());
+        }
+        assignAdminIfNeeded();
     }
 
     public Player getPlayer(String id) {
@@ -41,10 +47,36 @@ public class GameSession {
     }
 
     public void removePlayer(String playerId) {
+        handlePlayerLeave(playerId);
+    }
+
+    public void handlePlayerLeave(String playerId) {
         Player removed = players.remove(playerId);
+        joinOrder.remove(playerId);
         if (removed != null) {
+            if (playerId.equals(adminId)) {
+                adminId = null;
+                assignAdminIfNeeded();
+            }
             notifySessionUpdate("Player " + removed.getUsername() + " has left the game.");
         }
+    }
+
+    public void assignAdminIfNeeded() {
+        if (adminId != null) {
+            return;
+        }
+        if (!joinOrder.isEmpty()) {
+            adminId = joinOrder.get(0);
+        }
+    }
+
+    public List<String> getPlayerNames() {
+        return joinOrder.stream()
+            .map(players::get)
+            .filter(p -> p != null)
+            .map(Player::getUsername)
+            .collect(Collectors.toList());
     }
 
     public void subscribe(GameStateObserver observer) {
@@ -88,4 +120,5 @@ public class GameSession {
 
     public GamePhase getCurrentPhase() { return currentPhase; }
     public String getSessionId() { return sessionId; }
+    public String getAdminId() { return adminId; }
 }

@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.werewolf.game.GameSession;
-import com.werewolf.game.Player;
 import com.werewolf.security.CertificateManager;
 import com.werewolf.security.SSLContextFactory;
 
@@ -66,9 +65,6 @@ public class GameServer {
                     }
 
                     String tempPlayerId = "Player-" + clientSocket.getPort();
-
-                    Player newPlayer = new Player(tempPlayerId, tempPlayerId);
-                    gameSession.addPlayer(newPlayer);
 
                     ClientHandler handler = new ClientHandler(clientSocket, tempPlayerId, gameSession);
 

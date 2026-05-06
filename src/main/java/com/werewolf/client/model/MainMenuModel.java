@@ -11,6 +11,9 @@ public class MainMenuModel {
     private String port;
     private String statusMessage;
     private boolean isConnecting;
+    private List<String> playerNames;
+    private String adminName;
+    private boolean isAdmin;
 
     private final List<PropertyChangeListener> listeners = new ArrayList<>();
 
@@ -19,12 +22,16 @@ public class MainMenuModel {
         this.port = "8443";
         this.statusMessage = "Ready to connect";
         this.isConnecting = false;
+        this.playerNames = new ArrayList<>();
+        this.adminName = null;
+        this.isAdmin = false;
     }
 
     public void setUsername(String username) {
         String old = this.username;
         this.username = username;
         notifyListeners("username", old, username);
+        updateAdminStatus();
     }
 
     public void setIpAddress(String ipAddress) {
@@ -51,6 +58,25 @@ public class MainMenuModel {
         notifyListeners("isConnecting", old, connecting);
     }
 
+    public void setPlayerNames(List<String> playerNames) {
+        List<String> old = this.playerNames;
+        this.playerNames = (playerNames != null) ? new ArrayList<>(playerNames) : new ArrayList<>();
+        notifyListeners("playerNames", old, this.playerNames);
+    }
+
+    public void setAdminName(String adminName) {
+        String old = this.adminName;
+        this.adminName = adminName;
+        notifyListeners("adminName", old, adminName);
+        updateAdminStatus();
+    }
+
+    public void setIsAdmin(boolean isAdmin) {
+        boolean old = this.isAdmin;
+        this.isAdmin = isAdmin;
+        notifyListeners("isAdmin", old, isAdmin);
+    }
+
     public String getUsername() {
         return username;
     }
@@ -71,6 +97,18 @@ public class MainMenuModel {
         return isConnecting;
     }
 
+    public List<String> getPlayerNames() {
+        return new ArrayList<>(playerNames);
+    }
+
+    public String getAdminName() {
+        return adminName;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         listeners.add(listener);
     }
@@ -84,5 +122,13 @@ public class MainMenuModel {
         for (PropertyChangeListener listener : listeners) {
             listener.propertyChange(event);
         }
+    }
+
+    private void updateAdminStatus() {
+        if (username == null || adminName == null) {
+            setIsAdmin(false);
+            return;
+        }
+        setIsAdmin(username.equals(adminName));
     }
 }
