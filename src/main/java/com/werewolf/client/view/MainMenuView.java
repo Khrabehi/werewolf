@@ -45,7 +45,7 @@ public class MainMenuView extends Application {
 
         Scene scene = createMainMenuScene();
 
-        primaryStage.setTitle("Werewolf - The Village");
+        primaryStage.setTitle("Loup-Garou - Le Village");
         primaryStage.setScene(scene);
         primaryStage.setWidth(640);
         primaryStage.setHeight(600);
@@ -61,7 +61,7 @@ public class MainMenuView extends Application {
         root.setPadding(new Insets(30));
         root.setStyle("-fx-font-family: 'Arial'; -fx-font-size: 12;");
 
-        Label titleLabel = new Label("Werewolf - The Village");
+        Label titleLabel = new Label("Loup-Garou - Le Village");
         titleLabel.setStyle("-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         root.getChildren().add(titleLabel);
 
@@ -85,11 +85,11 @@ public class MainMenuView extends Application {
         formBox.setStyle("-fx-border-color: #ecf0f1; -fx-border-radius: 5; -fx-padding: 20;");
 
         HBox usernameBox = new HBox(10);
-        Label usernameLabel = new Label("Username");
+        Label usernameLabel = new Label("Pseudo");
         usernameLabel.setPrefWidth(80);
         usernameLabel.setStyle("-fx-font-weight: bold;");
         usernameField = new TextField();
-        usernameField.setPromptText("Enter your username (max 16 chars)");
+        usernameField.setPromptText("Entrez votre pseudo (max 16 car.)");
         usernameField.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(usernameField, Priority.ALWAYS);
         usernameField.textProperty().addListener((obs, oldVal, newVal) -> model.setUsername(newVal));
@@ -97,7 +97,7 @@ public class MainMenuView extends Application {
         formBox.getChildren().add(usernameBox);
 
         HBox ipBox = new HBox(10);
-        Label ipLabel = new Label("IP Address");
+        Label ipLabel = new Label("Adresse IP");
         ipLabel.setPrefWidth(80);
         ipLabel.setStyle("-fx-font-weight: bold;");
         ipField = new TextField(model.getIpAddress());
@@ -125,7 +125,7 @@ public class MainMenuView extends Application {
         VBox lobbyBox = new VBox(10);
         lobbyBox.setStyle("-fx-border-color: #ecf0f1; -fx-border-radius: 5; -fx-padding: 20;");
 
-        Label playersTitle = new Label("Players");
+        Label playersTitle = new Label("Joueurs");
         playersTitle.setStyle("-fx-font-weight: bold;");
         lobbyBox.getChildren().add(playersTitle);
 
@@ -133,7 +133,7 @@ public class MainMenuView extends Application {
         playerListView.setPrefHeight(120);
         lobbyBox.getChildren().add(playerListView);
 
-        adminLabel = new Label("Admin: -");
+        adminLabel = new Label("Admin : -");
         adminLabel.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 12;");
         lobbyBox.getChildren().add(adminLabel);
 
@@ -144,19 +144,19 @@ public class MainMenuView extends Application {
         HBox buttonBox = new HBox(10);
         buttonBox.setAlignment(Pos.CENTER);
 
-        joinButton = new Button("Join Game");
+        joinButton = new Button("Rejoindre");
         joinButton.setPrefWidth(120);
         joinButton.setPrefHeight(40);
         joinButton.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
         joinButton.setOnAction(e -> controller.connectToServer());
 
-        Button quitButton = new Button("Quit");
+        Button quitButton = new Button("Quitter");
         quitButton.setPrefWidth(120);
         quitButton.setPrefHeight(40);
         quitButton.setStyle("-fx-font-size: 14;");
         quitButton.setOnAction(e -> controller.quitApplication());
 
-        startGameButton = new Button("Start Game");
+        startGameButton = new Button("Démarrer");
         startGameButton.setPrefWidth(120);
         startGameButton.setPrefHeight(40);
         startGameButton.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
@@ -192,7 +192,7 @@ public class MainMenuView extends Application {
 
             if ("adminName".equals(event.getPropertyName())) {
                 String adminName = model.getAdminName();
-                adminLabel.setText(adminName != null ? "Admin: " + adminName : "Admin: -");
+                adminLabel.setText(adminName != null ? "Admin : " + adminName : "Admin : -");
                 return;
             }
 
@@ -213,7 +213,7 @@ public class MainMenuView extends Application {
         GameViewController gameViewController = new GameViewController(
             gameModel, controller.getConnectionManager()
         );
-        // Register handler first — this also replays any buffered updates (e.g. role assignment)
+        // Enregistrer le gestionnaire d'abord — cela rejoue également toutes les mises à jour mises en mémoire tampon (ex: assignation de rôle)
         controller.getConnectionManager().setGameStateUpdateHandler(gameViewController::processGameStateUpdate);
 
         GameView gameView = new GameView(primaryStage, gameModel, gameViewController);

@@ -80,6 +80,9 @@ public class MainMenuModel {
     }
 
     public void setGameStarted(boolean started) {
+        if (this.gameStarted == started) {
+            return;
+        }
         boolean old = this.gameStarted;
         this.gameStarted = started;
         notifyListeners("gameStarted", old, started);

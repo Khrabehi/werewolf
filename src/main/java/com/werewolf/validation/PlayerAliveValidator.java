@@ -8,7 +8,7 @@ public class PlayerAliveValidator extends AbstractValidator {
     @Override
     public ValidationResult validate(GameCommand cmd, Player actor, GameSession session) {
         if (!actor.isAlive()) {
-            return ValidationResult.INVALID("Dead players cannot act");
+            return ValidationResult.INVALID("Les joueurs éliminés ne peuvent pas agir");
         }
         return callNext(cmd, actor, session);
     }

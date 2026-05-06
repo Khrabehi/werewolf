@@ -11,17 +11,23 @@ public class TargetValidationValidator extends AbstractValidator {
         
         // Toutes les commandes supportées nécessitent une cible.
         if (targetId == null) {
-            return ValidationResult.INVALID("No target specified");
+            return ValidationResult.INVALID("Aucune cible spécifiée");
         }
         
         Player target = session.getPlayer(targetId);
         if (target == null || !target.isAlive()) {
-            return ValidationResult.INVALID("Target player not found or is dead");
+            return ValidationResult.INVALID("Le joueur ciblé est introuvable ou mort");
         }
         
         // Ne pas pouvoir se cibler soi-même (Optionnel, mais pertinent pour KILL et VOTE)
         if (actor.getId().equals(targetId)) {
-            return ValidationResult.INVALID("Cannot target yourself");
+            // Seul le Médecin (Medic) peut se cibler lui-même (pour se protéger pendant la nuit)
+            boolean isMedicSelfHeal = actor.getRole() != null && 
+                                      "Medic".equals(actor.getRole().getName()) &&
+                                      session.getCurrentPhase() == com.werewolf.game.GameState.NIGHT;
+            if (!isMedicSelfHeal) {
+                return ValidationResult.INVALID("Vous ne pouvez pas vous cibler vous-même");
+            }
         }
         
         return callNext(cmd, actor, session);

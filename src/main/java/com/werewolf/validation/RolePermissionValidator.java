@@ -8,11 +8,11 @@ public class RolePermissionValidator extends AbstractValidator {
     @Override
     public ValidationResult validate(GameCommand cmd, Player actor, GameSession session) {
         if (actor.getRole() == null) {
-            return ValidationResult.INVALID("Player has no role assigned");
+            return ValidationResult.INVALID("Le joueur n'a aucun rôle assigné");
         }
         if (!actor.getRole().canPerform(cmd.getActionType())) {
             return ValidationResult.INVALID(
-                "Action " + cmd.getActionType() + " not allowed for role " + actor.getRole().getName()
+                "L'action " + cmd.getActionType() + " n'est pas autorisée pour le rôle " + actor.getRole().getName()
             );
         }
         return callNext(cmd, actor, session);

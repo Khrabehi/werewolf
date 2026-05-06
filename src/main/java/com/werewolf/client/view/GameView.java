@@ -44,34 +44,34 @@ public class GameView {
     private final GameModel model;
     private final GameViewController controller;
 
-    // Root Scene
+    // Scène principale
     private BorderPane root;
 
-    // Layout panes for dynamic theme
+    // Panneaux de mise en page pour le thème dynamique
     private HBox headerPane;
     private VBox playerPanel;
     private VBox eventLogPanel;
     private VBox actionPanelBox;
 
-    // Header
+    // En-tête
     private Label phaseLabel;
     private Label roleLabel;
     private Label timerLabel;
 
-    // Timer state
+    // État du chronomètre
     private Timeline phaseTimer;
     private int timeRemaining;
     private GameState currentPhase;
 
-    // Player sidebar
+    // Barre latérale des joueurs
     private ListView<String> playerListView;
 
-    // Event log
+    // Journal des événements
     private ListView<String> eventLogView;
     private TextField chatField;
     private Button sendBtn;
 
-    // Action panel
+    // Panneau d'action
     private Label actionPromptLabel;
     private ListView<String> targetListView;
     private Button actionButton;
@@ -88,13 +88,13 @@ public class GameView {
         stage.setWidth(960);
         stage.setHeight(680);
         stage.setResizable(true);
-        stage.setTitle("Werewolf – In Game");
+        stage.setTitle("Loup-Garou – En jeu");
 
         model.addPropertyChangeListener(evt -> Platform.runLater(this::refreshUI));
         refreshUI();
     }
 
-    // ─────────────────────────── Scene construction ───────────────────────────
+    // ─────────────────────────── Construction de la scène ───────────────────────────
 
     private Scene buildScene() {
         root = new BorderPane();
@@ -119,7 +119,7 @@ public class GameView {
         header.setAlignment(Pos.CENTER_LEFT);
         header.setStyle("-fx-background-color: " + BG_HEADER + ";");
 
-        phaseLabel = new Label("LOBBY");
+        phaseLabel = new Label("SALON");
         phaseLabel.setFont(Font.font("Arial", FontWeight.BOLD, 22));
         phaseLabel.setTextFill(Color.web(GOLD));
 
@@ -246,7 +246,7 @@ public class GameView {
              + "-fx-background-radius: 6;";
     }
 
-    // ─────────────────────────── UI refresh ───────────────────────────────────
+    // ─────────────────────────── Rafraîchissement de l'interface ───────────────────────────────────
 
     private void refreshUI() {
         GameState phase = model.getGamePhase();
@@ -320,7 +320,7 @@ public class GameView {
             case DAY_DISCUSSION -> "☀️ JOUR — Discussion";
             case DAY_VOTING     -> "🗳️ JOUR — Vote";
             case GAME_OVER      -> "🏁 FIN DE PARTIE";
-            default             -> "LOBBY";
+            default             -> "SALON";
         };
         phaseLabel.setText(phaseText);
 
@@ -493,7 +493,7 @@ public class GameView {
         actionButton.setStyle(buildButtonStyle(BTN_RED));
     }
 
-    /** Appends game-over results to the event log (only once). */
+    /** Ajoute les résultats de fin de partie au journal des événements (une seule fois). */
     private void appendGameOverToLog() {
         String winner = model.getGameOverWinner();
         Map<String, String> allRoles = model.getAllRoles();
@@ -512,7 +512,7 @@ public class GameView {
         }
     }
 
-    // ─────────────────────────── Action handler ───────────────────────────────
+    // ─────────────────────────── Gestionnaire d'actions ───────────────────────────────
 
     private void handleActionClick() {
         String selected = targetListView.getSelectionModel().getSelectedItem();

@@ -21,9 +21,9 @@ public class GameViewController {
     }
 
     /**
-     * Processes a GameStateUpdate received from the server and updates the GameModel
-     * accordingly. Called from the ConnectionManager listener thread; all resulting
-     * JavaFX updates are dispatched via Platform.runLater inside the model listeners.
+     * Traite une GameStateUpdate reçue du serveur et met à jour le GameModel
+     * en conséquence. Appelé depuis le thread d'écoute du ConnectionManager ; toutes les mises à jour
+     * JavaFX résultantes sont réparties via Platform.runLater dans les écouteurs du modèle.
      */
     public void processGameStateUpdate(GameStateUpdate update) {
         GameState phase = update.getNewPhase();
@@ -39,12 +39,12 @@ public class GameViewController {
             model.addEventLog(message);
         }
 
-        // Private role assignment (sent once at game start)
+        // Assigner le rôle privé (envoyé une fois au début de la partie)
         if (metadata.containsKey("role")) {
             model.setMyRole((String) metadata.get("role"));
         }
 
-        // Game over
+        // Fin de la partie
         if (phase == GameState.GAME_OVER) {
             model.setGamePhase(GameState.GAME_OVER);
             model.setCanAct(false);
@@ -59,19 +59,19 @@ public class GameViewController {
             return;
         }
 
-        // Phase change → reset action state
+        // Changement de phase → réinitialiser l'état de l'action
         if (phase != null && phase != model.getGamePhase()) {
             model.setGamePhase(phase);
             model.setHasActedThisPhase(false);
             model.setCanAct(false);
         }
 
-        // Private night prompt → this player can act tonight
+        // Indication privée de nuit → ce joueur peut agir cette nuit
         if (Boolean.TRUE.equals(metadata.get("prompt"))) {
             model.setCanAct(true);
         }
 
-        // During day voting, every alive player gets to vote
+        // Pendant le vote de jour, chaque joueur en vie a le droit de voter
         if (phase == GameState.DAY_VOTING) {
             boolean isAlive = model.getAlivePlayers().stream()
                     .anyMatch(p -> p.getUsername().equals(model.getMyUsername()));
@@ -84,9 +84,9 @@ public class GameViewController {
     }
 
     /**
-     * Sends the appropriate night action command based on the player's role.
+     * Envoie la commande d'action de nuit appropriée en fonction du rôle du joueur.
      *
-     * @param targetUsername display name of the target player
+     * @param targetUsername pseudo du joueur cible
      */
     public void performNightAction(String targetUsername) {
         if (!model.isCanAct() || model.isHasActedThisPhase()) return;
@@ -109,13 +109,13 @@ public class GameViewController {
         connectionManager.sendGameCommand(type, targetId, model.getMyUsername());
         model.setHasActedThisPhase(true);
         model.setCanAct(false);
-        model.addEventLog("Action sent. Waiting for other players...");
+        model.addEventLog("Action envoyée. En attente des autres joueurs...");
     }
 
     /**
-     * Sends a vote command for the day-voting phase.
+     * Envoie une commande de vote pour la phase de vote de jour.
      *
-     * @param targetUsername display name of the player to vote against
+     * @param targetUsername pseudo du joueur contre lequel voter
      */
     public void performVote(String targetUsername) {
         if (!model.isCanAct() || model.isHasActedThisPhase()) return;
@@ -126,12 +126,12 @@ public class GameViewController {
         connectionManager.sendGameCommand(MessageType.VOTE, targetId, model.getMyUsername());
         model.setHasActedThisPhase(true);
         model.setCanAct(false);
-        model.addEventLog("Vote sent for " + targetUsername + ". Waiting for others...");
+        model.addEventLog("Vote envoyé contre " + targetUsername + ". En attente des autres...");
     }
 
     /**
-     * Dispatches a chat message to other players.
-     * @param message Text contents of the chat message.
+     * Diffuse un message de chat aux autres joueurs.
+     * @param message Contenu textuel du message.
      */
     public void sendChat(String message) {
         if (message == null || message.isBlank()) return;

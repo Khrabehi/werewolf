@@ -183,7 +183,9 @@ public class ConnectionManager {
                 break;
             case GAME_STARTED:
                 model.setStatusMessage("Game started.");
-                model.setGameStarted(true);
+                if (!model.isGameStarted()) {
+                    model.setGameStarted(true);
+                }
                 break;
             case GAME_STATE_UPDATE:
                 Object updateContent = message.getContent();

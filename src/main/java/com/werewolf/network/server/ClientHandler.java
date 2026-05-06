@@ -162,7 +162,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
             Message errorResponse = new Message(
                     MessageType.ERROR,
                     "Server",
-                    "Invalid command content.");
+                    "Contenu de commande invalide.");
             synchronized (outLock) {
                 out.writeObject(errorResponse);
                 out.flush();
@@ -186,7 +186,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
             return;
         }
 
-        Message ack = new Message(MessageType.GAME_COMMAND_RESPONSE, "Server", "Command accepted");
+        Message ack = new Message(MessageType.GAME_COMMAND_RESPONSE, "Server", "Commande acceptée");
         synchronized (outLock) {
             out.writeObject(ack);
             out.flush();
@@ -227,7 +227,7 @@ public class ClientHandler implements Runnable, GameStateObserver {
             return;
         }
 
-        Message ack = new Message(MessageType.GAME_STARTED, "Server", "Game started");
+        Message ack = new Message(MessageType.GAME_STARTED, "Server", "La partie a commencé");
         synchronized (outLock) {
             out.writeObject(ack);
             out.flush();
