@@ -15,11 +15,8 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 public class ConnectionManager {
-    private final SSLContext sslContext;
     private final MainMenuModel model;
     private final Consumer<Boolean> onConnectionResult;
-
-    private static final String STORE_PASSWORD = loadStorePassword();
 
     private SSLSocket socket;
     private ObjectOutputStream out;
@@ -28,16 +25,16 @@ public class ConnectionManager {
     public ConnectionManager(MainMenuModel model, Consumer<Boolean> onConnectionResult) {
         this.model = model;
         this.onConnectionResult = onConnectionResult;
-        this.sslContext = createSslContext();
     }
 
     private static SSLContext createSslContext() {
         try {
+            String storePassword = loadStorePassword();
             return SSLContextFactory.createClientSSLContext(
                 CertificateManager.CLIENT_KEYSTORE,
-                STORE_PASSWORD,
+                storePassword,
                 CertificateManager.CLIENT_TRUSTSTORE,
-                STORE_PASSWORD
+                storePassword
             );
         } catch (Exception e) {
             throw new IllegalStateException("Failed to initialize SSL context", e);
@@ -72,6 +69,7 @@ public class ConnectionManager {
     private void connect(ConnectionConfig config) throws IOException {
         model.setStatusMessage("Connecting to " + config.getIpAddress() + ":" + config.getPort() + "...");
 
+        SSLContext sslContext = createSslContext();
         SSLSocketFactory factory = sslContext.getSocketFactory();
         socket = (SSLSocket) factory.createSocket(
             config.getIpAddress(),
