@@ -14,7 +14,6 @@ public class GameController {
 
     @FXML
     public void initialize() {
-        // Initial label text is set in GameView.fxml
     }
 
     @FXML

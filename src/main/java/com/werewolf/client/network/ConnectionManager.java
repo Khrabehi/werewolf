@@ -34,8 +34,9 @@ public class ConnectionManager {
     private volatile boolean disconnectRequested;
 
     /**
-     * Routes GAME_STATE_UPDATE messages to the game view once the game starts.
-     * Updates received before this handler is set are buffered and replayed on registration.
+     * Achemine les messages `GAME_STATE_UPDATE` vers la vue de jeu lorsque la partie démarre.
+     * Les mises à jour reçues avant l'enregistrement du gestionnaire sont mises en mémoire tampon
+     * et rejouées lors de l'enregistrement.
      */
     private volatile Consumer<GameStateUpdate> gameStateUpdateHandler = null;
     private final List<GameStateUpdate> pendingGameUpdates = new ArrayList<>();
@@ -259,11 +260,11 @@ public class ConnectionManager {
         if (handler != null) {
             handler.accept(update);
         } else {
-            // Buffer updates that arrive before the game view is ready (e.g. role assignment)
+            // Met en mémoire les mises à jour arrivant avant que la vue de jeu soit prête (ex : assignation de rôle)
             synchronized (pendingGameUpdates) {
                 pendingGameUpdates.add(update);
             }
-            // Also show the message in the lobby status bar
+            // Affiche également le message dans la barre de statut du salon
             if (update.getMessage() != null) {
                 model.setStatusMessage(update.getMessage());
             }
@@ -271,8 +272,9 @@ public class ConnectionManager {
     }
 
     /**
-     * Registers the game-phase message handler. Immediately replays any updates that
-     * arrived before the game view was initialised (e.g. private role assignment).
+     * Enregistre le gestionnaire de messages liés à la phase de jeu. Réplique immédiatement
+     * toutes les mises à jour arrivées avant l'initialisation de la vue de jeu
+     * (par ex. assignation privée de rôle).
      */
     public void setGameStateUpdateHandler(Consumer<GameStateUpdate> handler) {
         this.gameStateUpdateHandler = handler;
@@ -294,11 +296,11 @@ public class ConnectionManager {
     }
 
     /**
-     * Sends a game action command (KILL / VOTE / HEAL / PEEK) to the server.
+     * Envoie une commande d'action de jeu (KILL / VOTE / HEAL / PEEK) au serveur.
      *
-     * @param type           the message type that identifies the action
-     * @param targetId       the server-assigned player ID of the target
-     * @param senderUsername this client's display name (used as message sender)
+     * @param type           le type de message identifiant l'action
+     * @param targetId       l'identifiant serveur du joueur ciblé
+     * @param senderUsername le nom d'affichage de ce client (utilisé comme expéditeur)
      */
     public void sendGameCommand(MessageType type, String targetId, String senderUsername) {
         if (!isConnected() || out == null) return;

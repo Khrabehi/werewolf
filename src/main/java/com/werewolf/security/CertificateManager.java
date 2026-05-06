@@ -9,11 +9,11 @@ import java.util.Arrays;
 
 public class CertificateManager {
 
-    // Target path for certificate artifacts — writable external location outside the source tree
+        // Emplacement cible pour les artefacts de certificats — emplacement externe en écriture en dehors du code source
     private static final String CERTS_DIR = System.getProperty("user.home") + File.separator
             + ".werewolf" + File.separator + "certificates" + File.separator;
 
-    // Certificate file names according to specifications
+    // Noms de fichiers des certificats selon les spécifications
     public static final String CA_CERT = CERTS_DIR + "rootCA.cer";
     public static final String CA_KEYSTORE = CERTS_DIR + "rootCA.p12"; // Internal keystore for the CA
 
@@ -23,14 +23,14 @@ public class CertificateManager {
     public static final String CLIENT_KEYSTORE = CERTS_DIR + "client.p12";
     public static final String CLIENT_TRUSTSTORE = CERTS_DIR + "client-truststore.p12";
 
-    /**
-     * Loads a KeyStore from a PKCS12 file.
-     *
-     * @param path     The path to the .p12 file
-     * @param password The password for the keystore
-     * @return The loaded KeyStore object
-     */
-    public static KeyStore loadKeyStore(String path, String password) throws Exception {
+        /**
+         * Charge un {@link KeyStore} depuis un fichier PKCS12.
+         *
+         * @param path     Le chemin vers le fichier .p12
+         * @param password Le mot de passe du keystore
+         * @return Le KeyStore chargé
+         */
+        public static KeyStore loadKeyStore(String path, String password) throws Exception {
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         try (FileInputStream fis = new FileInputStream(path)) {
             keyStore.load(fis, password.toCharArray());
@@ -38,18 +38,18 @@ public class CertificateManager {
         return keyStore;
     }
 
-    /**
-     * Orchestrates the entire mTLS certificate generation process.
-     * Creates a CA, signs server/client certs, and builds truststores.
-     * @param password The shared password for all stores in this dev environment
-     */
-    public static void initializeCertificates(String password) {
+        /**
+         * Orchestration du processus de génération de certificats mTLS.
+         * Crée une CA, signe les certificats serveur/client et génère les truststores.
+         * @param password Le mot de passe partagé pour tous les stores dans cet environnement de développement
+         */
+        public static void initializeCertificates(String password) {
         File dir = new File(CERTS_DIR);
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
-        // Determine existence of all expected certificate artifacts
+                // Vérifie l'existence de tous les artefacts de certificats attendus
         File[] expectedFiles = new File[] {
                 new File(CA_CERT),
                 new File(CA_KEYSTORE),
@@ -62,13 +62,13 @@ public class CertificateManager {
         boolean allExist = Arrays.stream(expectedFiles).allMatch(File::exists);
         boolean anyExist = Arrays.stream(expectedFiles).anyMatch(File::exists);
 
-        // Skip generation only if all certificate artifacts already exist
+                // Ignore la génération uniquement si tous les artefacts existent déjà
         if (allExist) {
             System.out.println("Certificates already exist. Skipping generation.");
             return;
         }
 
-        // Handle partially generated state by cleaning up existing artifacts
+                // En cas d'état partiellement généré, supprime les artefacts existants avant régénération
         if (anyExist) {
             System.out.println("Detected partially initialized certificate infrastructure. "
                     + "Cleaning up existing certificate artifacts before regeneration.");
@@ -83,22 +83,22 @@ public class CertificateManager {
         System.out.println("Initializing mTLS Certificate Infrastructure...");
 
         try {
-            // Generate CA (Certificate Authority)
+            // Génère la CA (Autorité de certification)
             runKeytool("-genkeypair", "-alias", "ca", "-keyalg", "RSA", "-keysize", "2048",
                     "-storetype", "PKCS12", "-keystore", CA_KEYSTORE, "-storepass", password,
                     "-validity", "3650", "-ext", "bc:c", "-dname", "CN=WerewolfCA, OU=GameDev, O=Werewolf, C=FR");
 
-            // Export CA public certificate
+            // Exporte le certificat public de la CA
             runKeytool("-exportcert", "-alias", "ca", "-keystore", CA_KEYSTORE,
                     "-storepass", password, "-file", CA_CERT);
 
-            // Generate and Sign Server Certificate
+            // Génère et signe le certificat serveur
             generateAndSignCert("server", "CN=WerewolfServer, OU=GameDev, O=Werewolf, C=FR", SERVER_KEYSTORE, password);
 
-            // Generate and Sign Client Certificate
+            // Génère et signe le certificat client
             generateAndSignCert("client", "CN=WerewolfClient, OU=GameDev, O=Werewolf, C=FR", CLIENT_KEYSTORE, password);
 
-            // Create Truststores (importing the CA cert so both sides trust each other)
+            // Crée les truststores (importe le certificat CA afin que les deux côtés se fassent confiance)
             runKeytool("-importcert", "-alias", "ca", "-keystore", SERVER_TRUSTSTORE,
                     "-storepass", password, "-file", CA_CERT, "-noprompt");
 
@@ -114,46 +114,46 @@ public class CertificateManager {
     }
 
     /**
-     * Helper method to generate a keypair, create a CSR, sign it with the CA, and
-     * import it back.
+     * Méthode utilitaire pour générer une paire de clés, créer une CSR, la faire signer par la CA,
+     * puis l'importer dans le keystore.
      */
     private static void generateAndSignCert(String alias, String dname, String keystorePath, String password)
             throws Exception {
         String csrFile = CERTS_DIR + alias + ".csr";
         String crtFile = CERTS_DIR + alias + ".crt";
 
-        // Generate Keypair
+        // Génère une paire de clés
         runKeytool("-genkeypair", "-alias", alias, "-keyalg", "RSA", "-keysize", "2048",
                 "-storetype", "PKCS12", "-keystore", keystorePath, "-storepass", password,
                 "-validity", "365", "-dname", dname);
 
-        // Generate Certificate Signing Request (CSR)
+        // Génère une demande de signature de certificat (CSR)
         runKeytool("-certreq", "-alias", alias, "-keystore", keystorePath,
                 "-storepass", password, "-file", csrFile);
 
-        // CA signs the CSR
+        // La CA signe la CSR
         runKeytool("-gencert", "-alias", "ca", "-keystore", CA_KEYSTORE, "-storepass", password,
                 "-infile", csrFile, "-outfile", crtFile, "-validity", "365");
 
-        // Import CA cert into the target keystore (required to establish chain)
+        // Importe le certificat CA dans le keystore cible (nécessaire pour établir la chaîne)
         runKeytool("-importcert", "-alias", "ca", "-keystore", keystorePath,
                 "-storepass", password, "-file", CA_CERT, "-noprompt");
 
-        // Import the newly signed certificate back into the keystore
+        // Importe le certificat nouvellement signé dans le keystore
         runKeytool("-importcert", "-alias", alias, "-keystore", keystorePath,
                 "-storepass", password, "-file", crtFile);
 
-        // Cleanup temporary CSR and CRT files
+        // Nettoie les fichiers temporaires CSR et CRT
         new File(csrFile).delete();
         new File(crtFile).delete();
     }
 
-    /**
-     * Helper to execute keytool commands via ProcessBuilder.
-     * Resolves keytool from the current JVM's java.home to avoid PATH issues.
-     * Captures stdout/stderr so errors include actionable output.
-     */
-    private static void runKeytool(String... args) throws Exception {
+        /**
+         * Utilitaire pour exécuter des commandes keytool via ProcessBuilder.
+         * Résout le chemin de keytool depuis le `java.home` courant pour éviter les problèmes de PATH.
+         * Capture stdout/stderr pour inclure la sortie dans les erreurs éventuelles.
+         */
+        private static void runKeytool(String... args) throws Exception {
         String keytoolPath = System.getProperty("java.home") + File.separator + "bin"
                 + File.separator + "keytool"
                 + (System.getProperty("os.name", "").toLowerCase().contains("win") ? ".exe" : "");
@@ -163,11 +163,11 @@ public class CertificateManager {
         System.arraycopy(args, 0, command, 1, args.length);
 
         ProcessBuilder pb = new ProcessBuilder(command);
-        pb.redirectErrorStream(true); // Merge stderr into stdout to avoid deadlock
+        pb.redirectErrorStream(true); // Fusionne stderr dans stdout pour éviter tout blocage
 
         Process process = pb.start();
 
-        // Consume all output before waiting to prevent buffer-full deadlock
+        // Lit toute la sortie avant d'attendre pour éviter un blocage dû à un tampon plein
         String output;
         try (InputStream is = process.getInputStream();
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

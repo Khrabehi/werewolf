@@ -30,7 +30,6 @@ public class GameServer {
         return password;
     }
 
-    // Thread pool to not overused the server
     private ExecutorService threadPool;
 
     public GameServer() {

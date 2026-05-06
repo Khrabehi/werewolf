@@ -8,31 +8,31 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 /**
- * factory used to generate SSLContext using CertificateManager those factory
- * will provide secured sockets.
+ * Fabrique utilisée pour générer des {@link SSLContext} en utilisant {@link CertificateManager}.
+ * Cette fabrique fournit des sockets sécurisés (mTLS).
  */
 public class SSLContextFactory {
-    private static final String TLS_VERSION = "TLSv1.3"; // Modern standard
+    private static final String TLS_VERSION = "TLSv1.3"; // Standard moderne
 
     /**
-     * Creates an SSLContext for the Server configured for mTLS.
-     * Requires a KeyStore (Server's identity) and a TrustStore (To validate
-     * Client's identity).
+     * Crée un {@link SSLContext} côté serveur configuré pour le mTLS.
+     * Nécessite un KeyStore (identité du serveur) et un TrustStore (pour valider
+     * l'identité des clients).
      */
     public static SSLContext createServerSSLContext(String keyStorePath, String keyStorePassword,
             String trustStorePath, String trustStorePassword) throws Exception {
 
-        // Initialize KeyManager (Server Identity)
+        // Initialise le KeyManager (identité du serveur)
         KeyStore keyStore = CertificateManager.loadKeyStore(keyStorePath, keyStorePassword);
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         kmf.init(keyStore, keyStorePassword.toCharArray());
 
-        // Initialize TrustManager (Validating Clients)
+        // Initialise le TrustManager (validation des clients)
         KeyStore trustStore = CertificateManager.loadKeyStore(trustStorePath, trustStorePassword);
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         tmf.init(trustStore);
 
-        // Create and initialize the SSLContext
+        // Crée et initialise le SSLContext
         SSLContext sslContext = SSLContext.getInstance(TLS_VERSION);
         sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
 
@@ -40,24 +40,24 @@ public class SSLContextFactory {
     }
 
     /**
-     * Creates an SSLContext for the Client configured for mTLS.
-     * Requires a KeyStore (Client's identity) and a TrustStore (To validate
-     * Server's identity).
+     * Crée un {@link SSLContext} côté client configuré pour le mTLS.
+     * Nécessite un KeyStore (identité du client) et un TrustStore (pour valider
+     * l'identité du serveur).
      */
     public static SSLContext createClientSSLContext(String keyStorePath, String keyStorePassword,
             String trustStorePath, String trustStorePassword) throws Exception {
 
-        // Initialize KeyManager (Client Identity)
+        // Initialise le KeyManager (identité du client)
         KeyStore keyStore = CertificateManager.loadKeyStore(keyStorePath, keyStorePassword);
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         kmf.init(keyStore, keyStorePassword.toCharArray());
 
-        // Initialize TrustManager (Validating Server)
+        // Initialise le TrustManager (validation du serveur)
         KeyStore trustStore = CertificateManager.loadKeyStore(trustStorePath, trustStorePassword);
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         tmf.init(trustStore);
 
-        // Create and initialize the SSLContext
+        // Crée et initialise le SSLContext
         SSLContext sslContext = SSLContext.getInstance(TLS_VERSION);
         sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
 

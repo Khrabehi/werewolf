@@ -45,14 +45,14 @@ public class GameClient {
 
     public void connect() {
         try {
-            // Create SSL Context with Client Identity and Server Validation
+                // Crée un SSLContext avec l'identité client et la validation du serveur
             SSLContext sslContext = SSLContextFactory.createClientSSLContext(
                     CertificateManager.CLIENT_KEYSTORE, STORE_PASSWORD,
                     CertificateManager.CLIENT_TRUSTSTORE, STORE_PASSWORD);
 
             SSLSocketFactory ssf = sslContext.getSocketFactory();
             socket = (SSLSocket) ssf.createSocket(serverAddress, serverPort);
-            ((SSLSocket) socket).startHandshake(); // Explicitly start the TLS handshake
+            ((SSLSocket) socket).startHandshake(); // Lance explicitement la négociation TLS
             System.out.println("Securely connected (mTLS) to server " + serverAddress + ":" + serverPort);
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());

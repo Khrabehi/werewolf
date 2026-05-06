@@ -7,10 +7,10 @@ public interface PlayerRole extends Serializable {
     String getName();
 
     /**
-     * Determines whether this role allows the specified action type.
-     *
-     * @param actionType the action type to check for this role
-     * @return {@code true} if this role can perform the specified action type; {@code false} otherwise
+        * Détermine si ce rôle autorise le type d'action spécifié.
+        *
+        * @param actionType le type d'action à vérifier pour ce rôle
+        * @return {@code true} si ce rôle peut effectuer le type d'action spécifié ; {@code false} sinon
      */
     boolean canPerform(String actionType);
 

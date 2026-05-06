@@ -92,7 +92,10 @@ public class GameModel {
     public String getGameOverWinner() { return gameOverWinner; }
     public Map<String, String> getAllRoles() { return new HashMap<>(allRoles); }
 
-    /** Finds the server-assigned player ID (e.g. "Player-43210") by display username. */
+    /**
+     * Trouve l'identifiant attribué par le serveur au joueur (par ex. "Player-43210")
+     * à partir du nom d'utilisateur affiché.
+     */
     public String findPlayerIdByUsername(String username) {
         return alivePlayers.stream()
             .filter(p -> p.getUsername().equals(username))
@@ -101,7 +104,10 @@ public class GameModel {
             .orElse(null);
     }
 
-    /** Returns alive player usernames, optionally excluding this client's own username. */
+    /**
+     * Retourne les noms d'utilisateur des joueurs encore en vie,
+     * en excluant éventuellement le nom de ce client.
+     */
     public List<String> getAlivePlayerUsernames(boolean excludeSelf) {
         return alivePlayers.stream()
             .map(Player::getUsername)
