@@ -1,5 +1,5 @@
 # werewolf
-School project, the goal is to create a project that included secure network communication. 
+Projet scolaire, l'objectif est de créer un projet qui inclut une communication réseau sécurisée.
 
 ## Prerequisites
 
@@ -44,19 +44,18 @@ Le mot de passe des keystores doit être le même côté serveur et côté clien
 
 ## Run unit tests
 
-From the project root:
-
+Depuis la racine du projet:
 ```bash
 mvn test
 ```
 
-This command runs all unit tests in `src/test/java`.
+Cette commande run tous les tests unitaires définis dans le projet.
 
 ## Architecture
 
-- Client UI: JavaFX views in `com.werewolf.client.view` for the main menu and in-game screen.
-- Client logic: Controllers and models in `com.werewolf.client.controller` and `com.werewolf.client.model`.
-- Network: `ConnectionManager` connects to the server and sends/receives serialized `Message` objects.
-- Server: `GameServer` accepts clients, `ClientHandler` handles per-client messages.
-- Game core: `GameSession` holds players/state, `GameManager` drives the game loop and phases.
-- Updates: Server broadcasts `GAME_STATE_UPDATE` to clients to drive UI changes.
+- Interface Client : Vues JavaFX dans `com.werewolf.client.view` pour le menu principal et l'écran de jeu.
+- Logique Client : Contrôleurs et modèles dans `com.werewolf.client.controller` et `com.werewolf.client.model`.
+- Réseau : `ConnectionManager` se connecte au serveur et envoie/reçoit des objets `Message` sérialisés.
+- Serveur : `GameServer` accepte les clients, `ClientHandler` gère les messages par client.
+- Cœur du jeu : `GameSession` contient les joueurs/l'état, `GameManager` pilote la boucle et les phases de jeu.
+- Mises à jour : Le serveur diffuse des `GAME_STATE_UPDATE` aux clients pour mettre à jour l'interface.
