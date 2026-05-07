@@ -16,16 +16,22 @@ import com.werewolf.security.SSLContextFactory;
 public class GameServer {
     private static final int PORT = 8443; // Standard port for HTTPS
     private static final int MAX_PLAYERS = 10;
+    private static final String DEFAULT_STORE_PASSWORD = "werewolf";
     private static final String STORE_PASSWORD = loadStorePassword();
 
     private static String loadStorePassword() {
         String password = System.getProperty("GAMESERVER_STORE_PASSWORD");
         if (password == null || password.isEmpty()) {
+            password = System.getProperty("WEREWOLF_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
             password = System.getenv("GAMESERVER_STORE_PASSWORD");
         }
         if (password == null || password.isEmpty()) {
-            throw new IllegalStateException(
-                    "Keystore password not configured. Set system property or environment variable 'GAMESERVER_STORE_PASSWORD'.");
+            password = System.getenv("WEREWOLF_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
+            password = DEFAULT_STORE_PASSWORD;
         }
         return password;
     }

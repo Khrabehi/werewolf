@@ -25,6 +25,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 public class ConnectionManager {
+    private static final String DEFAULT_STORE_PASSWORD = "werewolf";
     private final MainMenuModel model;
     private final Consumer<Boolean> onConnectionResult;
 
@@ -63,12 +64,16 @@ public class ConnectionManager {
     private static String loadStorePassword() {
         String password = System.getProperty("GAMECLIENT_STORE_PASSWORD");
         if (password == null || password.isEmpty()) {
+            password = System.getProperty("WEREWOLF_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
             password = System.getenv("GAMECLIENT_STORE_PASSWORD");
         }
         if (password == null || password.isEmpty()) {
-            throw new IllegalStateException(
-                "Keystore password not configured. Set system property or environment variable 'GAMECLIENT_STORE_PASSWORD'."
-            );
+            password = System.getenv("WEREWOLF_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
+            password = DEFAULT_STORE_PASSWORD;
         }
         return password;
     }

@@ -6,29 +6,41 @@ School project, the goal is to create a project that included secure network com
 - Java 17+
 - Maven 3.8+
 
-## Run the project
+## Lancer le jeu
 
-From the project root:
+Le jeu fonctionne en deux étapes : lancer d'abord le serveur, puis ouvrir un ou plusieurs clients.
+
+### 1. Démarrer le serveur
+
+Depuis la racine du projet :
 
 ```bash
-export GAMECLIENT_STORE_PASSWORD=change_me_123456
+export GAMESERVER_STORE_PASSWORD=werewolf
+mvn -DskipTests -Dexec.mainClass="com.werewolf.network.server.GameServer" \
+  -Dexec.classpathScope=runtime \
+  org.codehaus.mojo:exec-maven-plugin:3.1.0:java
+```
+
+### 2. Démarrer un client
+
+Dans un autre terminal :
+
+```bash
+export GAMECLIENT_STORE_PASSWORD=werewolf
 mvn clean javafx:run -Djavafx.mainClass=com.werewolf/com.werewolf.client.view.MainMenuView
 ```
 
-This command compiles and starts the JavaFX client UI.
+Cette commande ouvre l'interface graphique JavaFX du client.
 
-## Run the server
+### 3. Démarrer plusieurs clients
 
-From the project root:
+Pour ouvrir 4 clients en même temps :
 
 ```bash
-export GAMESERVER_STORE_PASSWORD=change_me_123456
-mvn -DskipTests -Dexec.mainClass="com.werewolf.network.server.GameServer" \
-	-Dexec.classpathScope=runtime \
-	org.codehaus.mojo:exec-maven-plugin:3.1.0:java
+bash scripts/run_clients.sh 4 werewolf
 ```
 
-Use the same password value for client and server. The password must be at least 6 characters.
+Le mot de passe des keystores doit être le même côté serveur et côté client. Si vous utilisez une autre valeur, remplacez simplement `werewolf` dans les commandes ci-dessus.
 
 ## Run unit tests
 

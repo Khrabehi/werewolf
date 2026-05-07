@@ -15,6 +15,7 @@ import com.werewolf.security.CertificateManager;
 import com.werewolf.security.SSLContextFactory;
 
 public class GameClient {
+    private static final String DEFAULT_STORE_PASSWORD = "werewolf";
 
     private String serverAddress;
     private int serverPort;
@@ -28,11 +29,16 @@ public class GameClient {
     private static String loadStorePassword() {
         String password = System.getProperty("GAMECLIENT_STORE_PASSWORD");
         if (password == null || password.isEmpty()) {
+            password = System.getProperty("WEREWOLF_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
             password = System.getenv("GAMECLIENT_STORE_PASSWORD");
         }
         if (password == null || password.isEmpty()) {
-            throw new IllegalStateException(
-                    "Keystore password not configured. Set system property or environment variable 'GAMECLIENT_STORE_PASSWORD'.");
+            password = System.getenv("WEREWOLF_STORE_PASSWORD");
+        }
+        if (password == null || password.isEmpty()) {
+            password = DEFAULT_STORE_PASSWORD;
         }
         return password;
     }

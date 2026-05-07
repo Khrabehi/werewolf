@@ -44,74 +44,96 @@ public class CertificateManager {
          * @param password Le mot de passe partagé pour tous les stores dans cet environnement de développement
          */
         public static void initializeCertificates(String password) {
-        File dir = new File(CERTS_DIR);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
+                File dir = new File(CERTS_DIR);
+                if (!dir.exists()) {
+                        dir.mkdirs();
+                }
 
                 // Vérifie l'existence de tous les artefacts de certificats attendus
-        File[] expectedFiles = new File[] {
-                new File(CA_CERT),
-                new File(CA_KEYSTORE),
-                new File(SERVER_KEYSTORE),
-                new File(SERVER_TRUSTSTORE),
-                new File(CLIENT_KEYSTORE),
-                new File(CLIENT_TRUSTSTORE)
-        };
+                File[] expectedFiles = new File[] {
+                                new File(CA_CERT),
+                                new File(CA_KEYSTORE),
+                                new File(SERVER_KEYSTORE),
+                                new File(SERVER_TRUSTSTORE),
+                                new File(CLIENT_KEYSTORE),
+                                new File(CLIENT_TRUSTSTORE)
+                };
 
-        boolean allExist = Arrays.stream(expectedFiles).allMatch(File::exists);
-        boolean anyExist = Arrays.stream(expectedFiles).anyMatch(File::exists);
+                boolean allExist = Arrays.stream(expectedFiles).allMatch(File::exists);
+                boolean anyExist = Arrays.stream(expectedFiles).anyMatch(File::exists);
 
-                // Ignore la génération uniquement si tous les artefacts existent déjà
-        if (allExist) {
-            System.out.println("Certificates already exist. Skipping generation.");
-            return;
-        }
+                // Ignore la génération uniquement si tous les artefacts existent déjà et sont lisibles
+                if (allExist) {
+                        if (areExistingCertificatesUsable(password)) {
+                                System.out.println("Certificates already exist and are usable. Skipping generation.");
+                                return;
+                        }
+
+                        System.out.println("Existing certificate artifacts could not be loaded with the current password. Regenerating...");
+                        deleteExpectedFiles(expectedFiles);
+                }
 
                 // En cas d'état partiellement généré, supprime les artefacts existants avant régénération
-        if (anyExist) {
-            System.out.println("Detected partially initialized certificate infrastructure. "
-                    + "Cleaning up existing certificate artifacts before regeneration.");
-            for (File file : expectedFiles) {
-                if (file.exists() && !file.delete()) {
-                    System.err.println("Warning: Failed to delete existing certificate file: "
-                            + file.getAbsolutePath());
+                if (anyExist && !allExist) {
+                        System.out.println("Detected partially initialized certificate infrastructure. "
+                                        + "Cleaning up existing certificate artifacts before regeneration.");
+                        deleteExpectedFiles(expectedFiles);
                 }
-            }
+
+                System.out.println("Initializing mTLS Certificate Infrastructure...");
+
+                try {
+                        // Génère la CA (Autorité de certification)
+                        runKeytool("-genkeypair", "-alias", "ca", "-keyalg", "RSA", "-keysize", "2048",
+                                        "-storetype", "PKCS12", "-keystore", CA_KEYSTORE, "-storepass", password,
+                                        "-validity", "3650", "-ext", "bc:c", "-dname", "CN=WerewolfCA, OU=GameDev, O=Werewolf, C=FR");
+
+                        // Exporte le certificat public de la CA
+                        runKeytool("-exportcert", "-alias", "ca", "-keystore", CA_KEYSTORE,
+                                        "-storepass", password, "-file", CA_CERT);
+
+                        // Génère et signe le certificat serveur
+                        generateAndSignCert("server", "CN=WerewolfServer, OU=GameDev, O=Werewolf, C=FR", SERVER_KEYSTORE, password);
+
+                        // Génère et signe le certificat client
+                        generateAndSignCert("client", "CN=WerewolfClient, OU=GameDev, O=Werewolf, C=FR", CLIENT_KEYSTORE, password);
+
+                        // Crée les truststores (importe le certificat CA afin que les deux côtés se fassent confiance)
+                        runKeytool("-importcert", "-alias", "ca", "-keystore", SERVER_TRUSTSTORE,
+                                        "-storepass", password, "-file", CA_CERT, "-noprompt");
+
+                        runKeytool("-importcert", "-alias", "ca", "-keystore", CLIENT_TRUSTSTORE,
+                                        "-storepass", password, "-file", CA_CERT, "-noprompt");
+
+                        System.out.println("mTLS Infrastructure generated successfully in " + CERTS_DIR + " folder.");
+
+                } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("Failed to initialize mTLS certificates", e);
+                }
         }
 
-        System.out.println("Initializing mTLS Certificate Infrastructure...");
-
-        try {
-            // Génère la CA (Autorité de certification)
-            runKeytool("-genkeypair", "-alias", "ca", "-keyalg", "RSA", "-keysize", "2048",
-                    "-storetype", "PKCS12", "-keystore", CA_KEYSTORE, "-storepass", password,
-                    "-validity", "3650", "-ext", "bc:c", "-dname", "CN=WerewolfCA, OU=GameDev, O=Werewolf, C=FR");
-
-            // Exporte le certificat public de la CA
-            runKeytool("-exportcert", "-alias", "ca", "-keystore", CA_KEYSTORE,
-                    "-storepass", password, "-file", CA_CERT);
-
-            // Génère et signe le certificat serveur
-            generateAndSignCert("server", "CN=WerewolfServer, OU=GameDev, O=Werewolf, C=FR", SERVER_KEYSTORE, password);
-
-            // Génère et signe le certificat client
-            generateAndSignCert("client", "CN=WerewolfClient, OU=GameDev, O=Werewolf, C=FR", CLIENT_KEYSTORE, password);
-
-            // Crée les truststores (importe le certificat CA afin que les deux côtés se fassent confiance)
-            runKeytool("-importcert", "-alias", "ca", "-keystore", SERVER_TRUSTSTORE,
-                    "-storepass", password, "-file", CA_CERT, "-noprompt");
-
-            runKeytool("-importcert", "-alias", "ca", "-keystore", CLIENT_TRUSTSTORE,
-                    "-storepass", password, "-file", CA_CERT, "-noprompt");
-
-            System.out.println("mTLS Infrastructure generated successfully in " + CERTS_DIR + " folder.");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to initialize mTLS certificates", e);
+        private static boolean areExistingCertificatesUsable(String password) {
+                try {
+                        loadKeyStore(CA_KEYSTORE, password);
+                        loadKeyStore(SERVER_KEYSTORE, password);
+                        loadKeyStore(CLIENT_KEYSTORE, password);
+                        loadKeyStore(SERVER_TRUSTSTORE, password);
+                        loadKeyStore(CLIENT_TRUSTSTORE, password);
+                        return true;
+                } catch (Exception e) {
+                        return false;
+                }
         }
-    }
+
+        private static void deleteExpectedFiles(File[] expectedFiles) {
+                for (File file : expectedFiles) {
+                        if (file.exists() && !file.delete()) {
+                                System.err.println("Warning: Failed to delete existing certificate file: "
+                                                + file.getAbsolutePath());
+                        }
+                }
+        }
 
     /**
      * Méthode utilitaire pour générer une paire de clés, créer une CSR, la faire signer par la CA,
