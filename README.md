@@ -32,14 +32,6 @@ mvn clean javafx:run -Djavafx.mainClass=com.werewolf/com.werewolf.client.view.Ma
 
 Cette commande ouvre l'interface graphique JavaFX du client.
 
-### 3. Démarrer plusieurs clients
-
-Pour ouvrir 4 clients en même temps :
-
-```bash
-bash scripts/run_clients.sh 4 werewolf
-```
-
 Le mot de passe des keystores doit être le même côté serveur et côté client. Si vous utilisez une autre valeur, remplacez simplement `werewolf` dans les commandes ci-dessus.
 
 ## Run unit tests
